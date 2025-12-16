@@ -1,3 +1,26 @@
 from django.shortcuts import render
 
-# Create your views here.
+
+# General views
+def index(request):
+    return render(request,'index.html')
+
+def about(request):
+    return render(request,'about.html')
+
+def contact(request):
+    return render(request,'contact.html')
+
+# auth related views
+def login(request):
+    return render(request,'login.html')
+
+def signup(request):
+    return render(request,'signup.html')
+
+# dashboard views
+def patient_dashboard(request):
+    return render(request,'patient_dashboard.html')
+
+def therapist_dashboard(request):
+    return render(request,'therapist_dashboard.html')
