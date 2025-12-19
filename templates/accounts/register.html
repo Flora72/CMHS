@@ -1,0 +1,38 @@
+{% extends 'base.html' %}
+
+{% block title %}Register - CMHS{% endblock %}
+
+{% block content %}
+<div class="flex justify-center items-center py-12">
+    <div class="w-full max-w-md bg-white p-8 rounded-2xl shadow-xl border-t-4 border-chiromo-gold">
+        
+        <div class="text-center mb-8">
+            <h2 class="text-3xl font-bold text-chiromo-navy">Create Account</h2>
+            <p class="text-gray-500 mt-2">Join Chiromo Mental Health System</p>
+        </div>
+
+        <form method="POST" class="space-y-6">
+            {% csrf_token %}
+            
+            {% for field in form %}
+            <div>
+                <label class="block text-sm font-medium text-chiromo-navy mb-1">{{ field.label }}</label>
+                {{ field }}
+                {% if field.errors %}
+                    <p class="text-red-500 text-xs mt-1">{{ field.errors.0 }}</p>
+                {% endif %}
+            </div>
+            {% endfor %}
+
+            <button type="submit" class="w-full bg-chiromo-navy hover:bg-blue-900 text-white font-bold py-3 rounded-lg transition duration-300 shadow-md">
+                Register
+            </button>
+        </form>
+
+        <p class="text-center text-sm text-gray-500 mt-6">
+            Already have an account? 
+            <a href="/login/" class="text-chiromo-gold font-bold hover:underline">Log in</a>
+        </p>
+    </div>
+</div>
+{% endblock %}
