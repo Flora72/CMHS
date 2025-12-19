@@ -6,26 +6,57 @@
     <title>{% block title %}Chiromo Mental Health System{% endblock %}</title>
 
     <script src="https://cdn.tailwindcss.com"></script>
-
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        chiromo: {
+                            gold: '#AC8341',
+                            navy: '#00183E',
+                            grey: '#546078',
+                            light: '#F3F4F6',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
 </head>
-<body class="bg-gray-50 text-gray-800 font-sans antialiased">
+<body class="bg-gray-50 text-chiromo-grey font-sans antialiased">
 
-    <nav class="bg-white shadow mb-8">
+    <nav class="bg-white shadow-md border-t-4 border-chiromo-gold mb-8">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex justify-between h-16">
-                <div class="flex">
-                    <a href="#" class="flex-shrink-0 flex items-center text-blue-600 font-bold text-xl">
-                        CMHS
+            <div class="flex justify-between h-20">
+                <div class="flex items-center">
+                    <a href="/" class="flex-shrink-0 flex items-center gap-2">
+                        <div class="w-10 h-10 bg-chiromo-navy rounded-full flex items-center justify-center text-white font-bold">C</div>
+                        <div class="flex flex-col">
+                            <span class="text-chiromo-navy font-bold text-xl leading-none">CHIROMO</span>
+                            <span class="text-chiromo-gold text-xs font-semibold tracking-widest uppercase">Hospital Group</span>
+                        </div>
+                    </a>
+                </div>
+                <div class="flex items-center gap-4">
+                    <a href="/login/" class="text-chiromo-navy hover:text-chiromo-gold font-medium transition">Login</a>
+                    <a href="/register/" class="bg-chiromo-gold hover:bg-yellow-600 text-white px-5 py-2 rounded-full font-medium transition shadow-sm">
+                        Get Started
                     </a>
                 </div>
             </div>
         </div>
     </nav>
 
-    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 min-h-screen">
         {% block content %}
         {% endblock %}
     </main>
+
+    <footer class="bg-chiromo-navy text-white mt-12 py-8">
+        <div class="max-w-7xl mx-auto px-4 text-center">
+            <p>&copy; 2025 Chiromo Mental Health System. Recovery in Dignity.</p>
+        </div>
+    </footer>
 
 </body>
 </html>
