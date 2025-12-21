@@ -1,0 +1,44 @@
+{% extends 'base.html' %}
+
+{% block title %}Login - CMHS{% endblock %}
+
+{% block content %}
+<div class="flex justify-center items-center py-12">
+    <div class="w-full max-w-md bg-white p-8 rounded-2xl shadow-xl border-t-4 border-chiromo-navy">
+        
+        <div class="text-center mb-8">
+            <h2 class="text-3xl font-bold text-chiromo-navy">Welcome Back</h2>
+            <p class="text-gray-500 mt-2">Sign in to access your dashboard</p>
+        </div>
+
+        <form method="POST" class="space-y-6">
+            {% csrf_token %}
+            
+            <div>
+                <label for="id_username" class="block text-sm font-medium text-chiromo-navy mb-1">Username</label>
+                <input type="text" name="username" id="id_username" required class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-chiromo-gold">
+            </div>
+
+            <div>
+                <label for="id_password" class="block text-sm font-medium text-chiromo-navy mb-1">Password</label>
+                <input type="password" name="password" id="id_password" required class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-chiromo-gold">
+            </div>
+
+            {% if form.errors %}
+                <div class="p-3 bg-red-50 text-red-600 rounded-md text-sm text-center">
+                    Invalid username or password.
+                </div>
+            {% endif %}
+
+            <button type="submit" class="w-full bg-chiromo-navy hover:bg-blue-900 text-white font-bold py-3 rounded-lg transition duration-300 shadow-md">
+                Sign In
+            </button>
+        </form>
+
+        <p class="text-center text-sm text-gray-500 mt-6">
+            Don't have an account? 
+            <a href="{% url 'register' %}" class="text-chiromo-gold font-bold hover:underline">Register here</a>
+        </p>
+    </div>
+</div>
+{% endblock %}
