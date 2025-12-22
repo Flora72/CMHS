@@ -23,41 +23,53 @@
         }
     </script>
 </head>
-<body class="bg-gray-50 text-chiromo-grey font-sans antialiased">
+<body class="bg-gray-50 text-chiromo-grey font-sans antialiased flex flex-col min-h-screen">
 
-<nav class="bg-white shadow-md border-t-4 border-chiromo-gold mb-8">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="flex justify-between h-20">
-            <div class="flex items-center">
-                <a href="/" class="flex-shrink-0 flex items-center gap-2">
-                    <div class="w-10 h-10 bg-chiromo-navy rounded-full flex items-center justify-center text-white font-bold">C</div>
-                    <div class="flex flex-col">
-                        <span class="text-chiromo-navy font-bold text-xl leading-none">CHIROMO</span>
-                        <span class="text-chiromo-gold text-xs font-semibold tracking-widest uppercase">Mental Health Hospital</span>
-                    </div>
-                </a>
-            </div>
+    {% block navbar %}
+    <nav class="bg-white shadow-md border-t-4 border-chiromo-gold mb-8">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-20">
+                <div class="flex items-center">
+                    <a href="/" class="flex-shrink-0 flex items-center gap-2">
+                        <div class="w-10 h-10 bg-chiromo-navy rounded-full flex items-center justify-center text-white font-bold">C</div>
+                        <div class="flex flex-col">
+                            <span class="text-chiromo-navy font-bold text-xl leading-none">CHIROMO</span>
+                            <span class="text-chiromo-gold text-xs font-semibold tracking-widest uppercase">Mental Health Hospital</span>
+                        </div>
+                    </a>
+                </div>
 
                 <div class="flex items-center gap-4">
-                    <a href="/login/" class="text-chiromo-navy hover:text-chiromo-gold font-medium transition">Login</a>
-                    <a href="/register/" class="bg-chiromo-gold hover:bg-yellow-600 text-white px-5 py-2 rounded-full font-medium transition shadow-sm">
-                        Get Started
-                    </a>
+                    {% if user.is_authenticated %}
+                         <a href="{% url 'dashboard' %}" class="text-chiromo-navy hover:text-chiromo-gold font-medium transition">Dashboard</a>
+                         <form action="{% url 'logout' %}" method="post" class="inline">
+                            {% csrf_token %}
+                            <button type="submit" class="text-gray-500 hover:text-red-600 font-medium transition text-sm">Logout</button>
+                         </form>
+                    {% else %}
+                        <a href="{% url 'login' %}" class="text-chiromo-navy hover:text-chiromo-gold font-medium transition">Login</a>
+                        <a href="{% url 'register' %}" class="bg-chiromo-gold hover:bg-yellow-600 text-white px-5 py-2 rounded-full font-medium transition shadow-sm">
+                            Get Started
+                        </a>
+                    {% endif %}
                 </div>
             </div>
         </div>
     </nav>
+    {% endblock %}
 
-    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 min-h-screen">
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex-grow w-full">
         {% block content %}
         {% endblock %}
     </main>
 
+    {% block footer %}
     <footer class="bg-chiromo-navy text-white mt-12 py-8">
         <div class="max-w-7xl mx-auto px-4 text-center">
             <p>&copy; 2025 Chiromo Mental Health System. Recovery in Dignity.</p>
         </div>
     </footer>
+    {% endblock %}
 
 </body>
 </html>
