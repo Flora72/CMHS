@@ -40,7 +40,8 @@
         <div class="max-w-7xl mx-auto h-full flex flex-col">
 
             <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-6 gap-4">
-                <div class="hidden md:block"> <h1 class="text-3xl font-extrabold text-chiromo-navy tracking-tight">My Schedule</h1>
+                <div class="hidden md:block">
+                    <h1 class="text-3xl font-extrabold text-chiromo-navy tracking-tight">My Schedule</h1>
                     <p class="text-gray-500 font-medium">Manage your sessions and availability</p>
                 </div>
 
@@ -59,9 +60,9 @@
                         </a>
                     </div>
 
-                    <button class="w-full sm:w-auto bg-chiromo-gold hover:bg-yellow-600 text-white px-6 py-3 rounded-full font-bold shadow-md transition flex items-center justify-center gap-2">
+                    <a href="{% url 'book_appointment' %}" class="w-full sm:w-auto bg-chiromo-gold hover:bg-yellow-600 text-white px-6 py-3 rounded-full font-bold shadow-md transition flex items-center justify-center gap-2">
                         <span>+</span> <span class="whitespace-nowrap">New Appointment</span>
-                    </button>
+                    </a>
                 </div>
             </div>
 
@@ -101,21 +102,27 @@
                                         </span>
 
                                         <div class="hidden md:block opacity-0 group-hover:opacity-100 transition-opacity transform translate-x-2 group-hover:translate-x-0">
-                                            <div class="w-6 h-6 bg-blue-100 text-chiromo-navy rounded-full flex items-center justify-center text-xs font-bold hover:bg-chiromo-gold hover:text-white">
+                                            <a href="{% url 'book_appointment' %}" class="w-6 h-6 bg-blue-100 text-chiromo-navy rounded-full flex items-center justify-center text-xs font-bold hover:bg-chiromo-gold hover:text-white">
                                                 +
-                                            </div>
+                                            </a>
                                         </div>
                                     </div>
 
-                                    {% if day == 3 %}
-                                        <div class="mt-1 md:mt-3 p-1 md:p-2 bg-blue-50 border-l-2 md:border-l-4 border-chiromo-navy rounded-r-md shadow-sm">
-                                            <p class="hidden md:block text-[10px] font-bold text-chiromo-navy uppercase tracking-wide">Therapy</p>
-                                            <div class="flex items-center gap-1">
-                                                <div class="w-2 h-2 rounded-full bg-chiromo-gold md:hidden"></div>
-                                                <p class="text-[10px] md:text-xs text-gray-600 truncate">Dr. Omondi</p>
-                                            </div>
-                                        </div>
-                                    {% endif %}
+                                    {% for day_num, appts in appointments_by_day.items %}
+                                        {% if day_num == day %}
+                                            {% for appt in appts %}
+                                                <div class="mt-1 md:mt-2 p-1 md:p-2 bg-blue-50 border-l-2 md:border-l-4 border-chiromo-navy rounded-r-md shadow-sm hover:shadow-md transition">
+                                                    <p class="hidden md:block text-[10px] font-bold text-chiromo-navy uppercase tracking-wide">
+                                                        {{ appt.time|time:"H:i" }}
+                                                    </p>
+                                                    <div class="flex items-center gap-1">
+                                                        <div class="w-2 h-2 rounded-full bg-chiromo-gold md:hidden"></div>
+                                                        <p class="text-[10px] md:text-xs text-gray-600 truncate">Dr. {{ appt.therapist.last_name }}</p>
+                                                    </div>
+                                                </div>
+                                            {% endfor %}
+                                        {% endif %}
+                                    {% endfor %}
 
                                 </div>
                             {% endif %}
