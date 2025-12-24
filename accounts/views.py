@@ -1,5 +1,6 @@
+from django.contrib import messages
 from django.shortcuts import render, redirect
-from django.contrib.auth import login, authenticate
+from django.contrib.auth import login
 from django.contrib.auth.forms import AuthenticationForm
 from .forms import PatientRegistrationForm
 from django.contrib.auth.decorators import login_required
@@ -34,9 +35,16 @@ def login_view(request):
 @login_required
 def dashboard(request):
     user = request.user
-
-    # In the future, we will check: if user.role == 'therapist': return ...
-
-    # For now, return the Patient Dashboard
     return render(request, 'accounts/dashboard.html')
 
+
+# accounts/views.py
+
+@login_required
+def therapist_dashboard(request):
+    # Security Check: Kick them out if they are not a therapist
+    if request.user.role != 'therapist':
+        messages.error(request, "Access denied. Restricted to medical staff.")
+        return redirect('dashboard')
+
+    return render(request, 'accounts/therapist_dashboard.html')
