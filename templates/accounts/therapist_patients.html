@@ -1,0 +1,27 @@
+{% extends 'base.html' %}
+{% block title %}My Patients | CMHS{% endblock %}
+{% block navbar %}{% endblock %}{% block footer %}{% endblock %}
+
+{% block content %}
+<div class="fixed inset-0 flex bg-gray-50 overflow-hidden font-sans">
+    {% include 'includes/sidebar.html' %}
+    <main class="flex-1 overflow-y-auto bg-gray-50 p-8 w-full">
+        <h1 class="text-3xl font-bold text-chiromo-navy mb-6">My Patients</h1>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {% for patient in patients %}
+            <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200 flex items-center gap-4">
+                <div class="w-12 h-12 rounded-full bg-chiromo-gold text-white flex items-center justify-center font-bold text-xl">
+                    {{ patient.first_name|first }}
+                </div>
+                <div>
+                    <h3 class="font-bold text-chiromo-navy">{{ patient.first_name }} {{ patient.last_name }}</h3>
+                    <p class="text-xs text-gray-500">{{ patient.email }}</p>
+                </div>
+            </div>
+            {% empty %}
+            <p class="text-gray-500 col-span-3 text-center py-12">No patients assigned yet.</p>
+            {% endfor %}
+        </div>
+    </main>
+</div>
+{% endblock %}

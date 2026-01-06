@@ -1,0 +1,40 @@
+{% extends 'base.html' %}
+{% block title %}My Appointments | CMHS{% endblock %}
+{% block navbar %}{% endblock %}{% block footer %}{% endblock %}
+
+{% block content %}
+<div class="fixed inset-0 flex bg-gray-50 overflow-hidden font-sans">
+    {% include 'includes/sidebar.html' %}
+    <main class="flex-1 overflow-y-auto bg-gray-50 p-8 w-full">
+        <h1 class="text-3xl font-bold text-chiromo-navy mb-6">All Appointments</h1>
+        
+        <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+            <table class="w-full text-left border-collapse">
+                <thead class="bg-gray-50 text-gray-500 text-xs uppercase">
+                    <tr>
+                        <th class="px-6 py-4">Patient</th>
+                        <th class="px-6 py-4">Date</th>
+                        <th class="px-6 py-4">Status</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-100">
+                    {% for appt in appointments %}
+                    <tr>
+                        <td class="px-6 py-4 font-bold text-chiromo-navy">{{ appt.patient.first_name }} {{ appt.patient.last_name }}</td>
+                        <td class="px-6 py-4">{{ appt.date }} at {{ appt.time }}</td>
+                        <td class="px-6 py-4">
+                            <span class="px-2 py-1 rounded text-xs font-bold 
+                                {% if appt.status == 'confirmed' %}bg-green-100 text-green-700{% elif appt.status == 'pending' %}bg-orange-100 text-orange-700{% else %}bg-gray-100{% endif %}">
+                                {{ appt.status|title }}
+                            </span>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="3" class="px-6 py-12 text-center text-gray-500">No appointments found.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </main>
+</div>
+{% endblock %}
