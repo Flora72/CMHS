@@ -1,0 +1,61 @@
+{% extends 'base.html' %}
+{% block title %}My Wellness Library | CMHS{% endblock %}
+{% block navbar %}{% endblock %}{% block footer %}{% endblock %}
+
+{% block content %}
+<div class="fixed inset-0 flex bg-gray-50 overflow-hidden font-sans">
+    
+    {% include 'includes/patient_sidebar.html' %}
+
+    <main class="flex-1 overflow-y-auto bg-gray-50 p-8 w-full flex flex-col mt-16 md:mt-0">
+        <div class="max-w-4xl mx-auto">
+            
+            <div class="mb-8">
+                <h1 class="text-3xl font-bold text-chiromo-navy">Wellness Library</h1>
+                <p class="text-gray-500 mt-1">Access resources, guides, and prescriptions shared by your therapist.</p>
+            </div>
+
+            {% if resources %}
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {% for item in resources %}
+                    <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition group">
+                        <div class="flex items-start justify-between">
+                            <div class="flex items-center gap-4">
+                                <div class="w-12 h-12 rounded-lg bg-blue-50 text-chiromo-navy flex items-center justify-center text-2xl group-hover:scale-110 transition">
+                                    📄
+                                </div>
+                                <div>
+                                    <h3 class="font-bold text-chiromo-navy">Session Resource</h3>
+                                    <p class="text-xs text-gray-400">{{ item.session_date|date:"M d, Y" }}</p>
+                                </div>
+                            </div>
+                            <span class="text-xs font-bold bg-green-100 text-green-700 px-2 py-1 rounded">New</span>
+                        </div>
+
+                        <div class="mt-4 pt-4 border-t border-gray-50">
+                            <p class="text-sm text-gray-600 mb-4">
+                                Shared by <span class="font-bold">Dr. {{ item.therapist.last_name }}</span> regarding your session on {{ item.appointment.date }}.
+                            </p>
+                            
+                            <a href="{{ item.resources.url }}" target="_blank" class="flex items-center justify-center gap-2 w-full py-2 bg-chiromo-navy text-white text-sm font-bold rounded-lg hover:bg-blue-900 transition">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+                                Download File
+                            </a>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="text-center py-20 bg-white rounded-xl border border-dashed border-gray-300">
+                    <div class="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center text-gray-300 mx-auto mb-4">
+                        <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path></svg>
+                    </div>
+                    <h3 class="text-lg font-medium text-gray-900">Library is empty</h3>
+                    <p class="text-gray-500 mt-1">Resources shared by your therapist will appear here.</p>
+                </div>
+            {% endif %}
+
+        </div>
+    </main>
+</div>
+{% endblock %}
