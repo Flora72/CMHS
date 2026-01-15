@@ -4,24 +4,73 @@
 
 {% block content %}
 <div class="fixed inset-0 flex bg-gray-50 overflow-hidden font-sans">
-    {% include 'includes/sidebar.html' %}
-    <main class="flex-1 overflow-y-auto bg-gray-50 p-8 w-full">
-        <h1 class="text-3xl font-bold text-chiromo-navy mb-6">My Patients</h1>
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+
+    {% include 'includes/therapist_sidebar.html' %}
+
+    <main class="flex-1 overflow-y-auto bg-gray-50 p-8 w-full flex flex-col mt-16 md:mt-0">
+
+        <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
+            <div>
+                <h1 class="text-3xl font-bold text-chiromo-navy">My Patients</h1>
+                <p class="text-gray-500 mt-1">Manage your patient list and view histories.</p>
+            </div>
+
+            <div class="relative w-full md:w-64">
+                <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-400">
+                    <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                </span>
+                <input type="text" class="w-full pl-10 pr-4 py-2 rounded-lg border border-gray-200 focus:border-chiromo-gold focus:ring-1 focus:ring-chiromo-gold outline-none text-sm transition" placeholder="Search patients...">
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {% for patient in patients %}
-            <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200 flex items-center gap-4">
-                <div class="w-12 h-12 rounded-full bg-chiromo-gold text-white flex items-center justify-center font-bold text-xl">
-                    {{ patient.first_name|first }}
+            <div class="bg-white rounded-xl shadow-sm border border-gray-100 hover:shadow-lg transition-all duration-300 group flex flex-col overflow-hidden">
+
+                <div class="h-16 bg-gradient-to-r from-blue-900 to-chiromo-navy"></div>
+
+                <div class="px-6 pb-6 -mt-10 flex-1 flex flex-col items-center text-center">
+                    <div class="w-20 h-20 rounded-full border-4 border-white bg-gray-100 flex items-center justify-center shadow-sm text-2xl font-bold text-chiromo-navy mb-3 group-hover:scale-105 transition">
+                        {{ patient.first_name|first|default:patient.username|first|upper }}
+                    </div>
+
+                    <h3 class="font-bold text-lg text-chiromo-navy">
+                        {% if patient.first_name %}
+                            {{ patient.first_name }} {{ patient.last_name }}
+                        {% else %}
+                            {{ patient.username }}
+                        {% endif %}
+                    </h3>
+
+                    <p class="text-xs text-gray-400 uppercase tracking-wide font-bold mt-1">Patient</p>
+                    <p class="text-sm text-gray-500 mt-1 truncate w-full">{{ patient.email }}</p>
+
+                    <span class="mt-3 px-2 py-1 bg-green-50 text-green-600 text-xs font-bold rounded-full border border-green-100">
+                        Active Profile
+                    </span>
                 </div>
-                <div>
-                    <h3 class="font-bold text-chiromo-navy">{{ patient.first_name }} {{ patient.last_name }}</h3>
-                    <p class="text-xs text-gray-500">{{ patient.email }}</p>
+
+                <div class="p-4 border-t border-gray-50 bg-gray-50/50 flex gap-2">
+                    <button class="flex-1 py-2 px-3 bg-white border border-gray-200 text-gray-600 text-xs font-bold rounded hover:bg-white hover:text-chiromo-gold hover:border-chiromo-gold transition shadow-sm">
+                        View History
+                    </button>
+                    <a href="{% url 'inbox_with_id' patient.id %}" class="inline-block text-center py-2 px-3 bg-chiromo-navy text-white text-xs font-bold rounded hover:bg-blue-900 transition shadow-sm">
+                    Message
+                    </a>
                 </div>
             </div>
             {% empty %}
-            <p class="text-gray-500 col-span-3 text-center py-12">No patients assigned yet.</p>
+
+            <div class="col-span-full flex flex-col items-center justify-center py-20 bg-white rounded-xl border border-dashed border-gray-300 text-center">
+                <div class="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center text-gray-300 mb-4">
+                    <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
+                </div>
+                <h3 class="text-lg font-medium text-gray-900">No patients assigned</h3>
+                <p class="text-gray-500 mt-1 max-w-sm">Once patients book an appointment with you, their profiles will appear here automatically.</p>
+            </div>
             {% endfor %}
         </div>
+
     </main>
 </div>
 {% endblock %}
