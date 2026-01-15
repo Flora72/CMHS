@@ -1,5 +1,8 @@
+
 from django.db import models
 from django.conf import settings
+
+from accounts.models import User
 
 
 class Appointment(models.Model):
@@ -34,7 +37,6 @@ class Appointment(models.Model):
     def __str__(self):
         return f"{self.patient.username} with {self.therapist.username} on {self.date}"
 
-
 class SessionLog(models.Model):
     appointment = models.OneToOneField(Appointment, on_delete=models.CASCADE)
     therapist = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
@@ -46,7 +48,6 @@ class SessionLog(models.Model):
 
     def __str__(self):
         return f"Session: {self.patient.username} - {self.session_date}"
-
 
 class Payment(models.Model):
     PAYMENT_STATUS = (
@@ -64,3 +65,34 @@ class Payment(models.Model):
 
     def __str__(self):
         return f"{self.transaction_code} - {self.amount}"
+
+class MoodEntry(models.Model):
+    MOOD_CHOICES = [
+        ('great', 'Great'),
+        ('okay', 'Okay'),
+        ('low', 'Low'),
+        ('bad', 'Bad'),
+    ]
+
+    patient = models.ForeignKey(User, on_delete=models.CASCADE, related_name='moods')
+    mood = models.CharField(max_length=10, choices=MOOD_CHOICES)
+    created_at = models.DateField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ('patient', 'created_at')
+
+    def __str__(self):
+        return f"{self.patient.username} - {self.mood} - {self.created_at}"
+
+class Message(models.Model):
+    sender = models.ForeignKey(User, related_name="sent_messages", on_delete=models.CASCADE)
+    recipient = models.ForeignKey(User, related_name="received_messages", on_delete=models.CASCADE)
+    body = models.TextField()
+    timestamp = models.DateTimeField(auto_now_add=True)
+    is_read = models.BooleanField(default=False)
+
+    class Meta:
+        ordering = ['timestamp']
+
+    def __str__(self):
+        return f"From {self.sender} to {self.recipient}"
