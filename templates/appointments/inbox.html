@@ -1,0 +1,73 @@
+{% extends 'base.html' %}
+{% block title %}Messages | CMHS{% endblock %}
+{% block navbar %}{% endblock %}{% block footer %}{% endblock %}
+
+{% block content %}
+<div class="fixed inset-0 flex bg-gray-50 overflow-hidden font-sans">
+    
+    {% if user.role == 'therapist' %}
+        {% include 'includes/therapist_sidebar.html' %}
+    {% else %}
+        {% include 'includes/patient_sidebar.html' %}
+    {% endif %}
+
+    <main class="flex-1 overflow-y-auto bg-gray-50 p-8 w-full flex flex-col mt-16 md:mt-0">
+
+        <div class="mb-6 flex justify-between items-center">
+            <div>
+                <h1 class="text-3xl font-bold text-chiromo-navy">Messages</h1>
+
+                <p class="text-gray-500 mt-1">
+                    Chatting with
+                    <span class="font-bold text-chiromo-navy">
+                        {% if chat_partner.role == 'therapist' %}
+                            Dr. {{ chat_partner.last_name|default:chat_partner.username }}
+                        {% else %}
+                            {{ chat_partner.first_name|default:chat_partner.username }}
+                            {{ chat_partner.last_name }}
+                        {% endif %}
+                    </span>
+                </p>
+            </div>
+        </div>
+        <div class="flex-1 bg-white rounded-xl shadow-sm border border-gray-200 flex flex-col overflow-hidden max-h-[600px]">
+
+            <div class="flex-1 overflow-y-auto p-6 space-y-4 bg-gray-50/50">
+                {% for msg in messages_list %}
+                    {% if msg.sender == request.user %}
+                        <div class="flex justify-end">
+                            <div class="bg-chiromo-navy text-white px-4 py-2 rounded-t-xl rounded-bl-xl max-w-md shadow-sm">
+                                <p class="text-sm">{{ msg.body }}</p>
+                                <p class="text-[10px] text-blue-200 text-right mt-1">{{ msg.timestamp|date:"H:i" }}</p>
+                            </div>
+                        </div>
+                    {% else %}
+                        <div class="flex justify-start">
+                            <div class="bg-white border border-gray-200 text-gray-800 px-4 py-2 rounded-t-xl rounded-br-xl max-w-md shadow-sm">
+                                <p class="text-sm">{{ msg.body }}</p>
+                                <p class="text-[10px] text-gray-400 mt-1">{{ msg.timestamp|date:"H:i" }}</p>
+                            </div>
+                        </div>
+                    {% endif %}
+                {% empty %}
+                    <div class="text-center py-10 text-gray-400">
+                        <p>No messages yet. Say hello!</p>
+                    </div>
+                {% endfor %}
+            </div>
+
+            <div class="p-4 bg-white border-t border-gray-100">
+                <form method="POST" class="flex gap-2">
+                    {% csrf_token %}
+                    <input type="text" name="body" required placeholder="Type your message here..." 
+                           class="flex-1 border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-chiromo-navy">
+                    <button type="submit" class="bg-chiromo-gold text-white font-bold px-6 py-2 rounded-lg hover:bg-yellow-600 transition">
+                        Send
+                    </button>
+                </form>
+            </div>
+
+        </div>
+    </main>
+</div>
+{% endblock %}
