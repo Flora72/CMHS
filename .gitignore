@@ -88,6 +88,7 @@ docs/_build/
 
 # Jupyter Notebook
 .ipynb_checkpoints
+therapy_resources
 
 # Node
 node_modules/
