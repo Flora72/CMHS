@@ -1,0 +1,89 @@
+<div class="md:hidden fixed top-0 w-full bg-chiromo-navy text-white z-50 flex justify-between items-center px-4 h-16 shadow-md">
+    <div class="flex items-center gap-2">
+        <div class="w-8 h-8 rounded bg-chiromo-gold flex items-center justify-center text-chiromo-navy font-bold text-lg">C</div>
+        <span class="font-bold text-lg text-white">Therapist Dashboard</span>
+    </div>
+    <button onclick="document.getElementById('mobile-menu').classList.remove('hidden')" class="text-white focus:outline-none p-2">
+        <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
+    </button>
+</div>
+
+<div id="mobile-menu" class="hidden fixed inset-0 z-50 bg-chiromo-navy bg-opacity-95 transition-all duration-300">
+
+    <button onclick="document.getElementById('mobile-menu').classList.add('hidden')" class="absolute top-4 right-4 text-white p-2">
+        <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+    </button>
+
+    <div class="flex flex-col space-y-6 pt-20 px-8">
+        <a href="{% url 'therapist_dashboard' %}" class="text-white text-xl font-medium border-b border-blue-900 pb-2 hover:text-chiromo-gold">Overview</a>
+        <a href="{% url 'therapist_appointments' %}" class="text-white text-xl font-medium border-b border-blue-900 pb-2 hover:text-chiromo-gold">Appointments</a>
+        <a href="{% url 'therapist_patients' %}" class="text-white text-xl font-medium border-b border-blue-900 pb-2 hover:text-chiromo-gold">My Patients</a>
+        <a href="{% url 'inbox' %}" class="text-white text-xl font-medium border-b border-blue-900 pb-2 hover:text-chiromo-gold">Messages</a>
+
+        <form action="{% url 'logout' %}" method="post" class="mt-8">
+            {% csrf_token %}
+            <button type="submit" class="text-red-400 font-bold text-xl flex items-center gap-2">
+                Sign Out
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
+            </button>
+        </form>
+    </div>
+</div>
+
+<div class="hidden md:flex md:flex-shrink-0">
+    <div class="flex flex-col w-64 bg-chiromo-navy text-white shadow-xl z-20 h-full">
+        <div class="h-20 flex items-center px-6 bg-blue-950 border-b border-blue-900 flex-shrink-0">
+            <div class="flex items-center gap-3">
+                <div class="w-8 h-8 rounded bg-chiromo-gold flex items-center justify-center text-chiromo-navy font-bold text-lg">C</div>
+                <span class="font-bold text-lg tracking-wide">Therapist Dashboard</span>
+            </div>
+        </div>
+
+        <div class="flex-1 flex flex-col p-4 space-y-2 overflow-y-auto">
+            <p class="px-4 text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Main Menu</p>
+
+            <a href="{% url 'therapist_dashboard' %}" class="flex items-center gap-3 px-4 py-3 {% if request.resolver_match.url_name == 'therapist_dashboard' %}bg-white/10 text-white border-l-4 border-chiromo-gold{% else %}text-gray-300 hover:bg-white/5 hover:text-white{% endif %} rounded-lg transition">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path></svg>
+                <span class="font-medium">Overview</span>
+            </a>
+
+            <a href="{% url 'therapist_appointments' %}" class="flex items-center gap-3 px-4 py-3 {% if request.resolver_match.url_name == 'therapist_appointments' %}bg-white/10 text-white border-l-4 border-chiromo-gold{% else %}text-gray-300 hover:bg-white/5 hover:text-white{% endif %} rounded-lg transition">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                <span class="font-medium">Appointments</span>
+            </a>
+
+            <a href="{% url 'therapist_patients' %}" class="flex items-center gap-3 px-4 py-3 {% if request.resolver_match.url_name == 'therapist_patients' %}bg-white/10 text-white border-l-4 border-chiromo-gold{% else %}text-gray-300 hover:bg-white/5 hover:text-white{% endif %} rounded-lg transition">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
+                <span class="font-medium">My Patients</span>
+            </a>
+
+            <a href="{% url 'inbox' %}" class="flex items-center gap-3 px-4 py-3 {% if 'inbox' in request.path %}bg-white/10 text-white border-l-4 border-chiromo-gold{% else %}text-gray-300 hover:bg-white/5 hover:text-white{% endif %} rounded-lg transition">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"></path></svg>
+                <span class="font-medium">Messages</span>
+            </a>
+
+          <a href="{% url 'settings' %}" class="flex items-center gap-3 px-4 py-3 {% if request.resolver_match.url_name == 'settings' %}bg-white/10 text-white border-l-4 border-chiromo-gold{% else %}text-gray-300 hover:bg-white/5 hover:text-white{% endif %} rounded-lg transition">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                <span class="font-medium">Settings</span>
+            </a>
+     </div>
+
+        <div class="p-4 bg-blue-950 border-t border-blue-900 flex-shrink-0">
+            <div class="flex items-center gap-3 mb-4">
+                <div class="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center text-chiromo-navy font-bold">
+                    Dr
+                </div>
+                <div>
+                    <p class="text-sm font-bold text-white">{{ user.last_name|default:user.username }}</p>
+                </div>
+            </div>
+            <form action="{% url 'logout' %}" method="post">
+                {% csrf_token %}
+                <button type="submit" class="w-full py-2 px-4 bg-red-500/10 hover:bg-red-500 text-red-400 hover:text-white rounded transition text-sm font-bold flex items-center justify-center gap-2">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
+                    Sign Out
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
