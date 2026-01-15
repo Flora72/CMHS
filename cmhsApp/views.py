@@ -20,7 +20,7 @@ def signup(request):
 
 # dashboard views
 def patient_dashboard(request):
-    return render(request, 'accounts/dashboard.html')
+    return render(request, 'accounts/patient_dashboard.html')
 
 def therapist_dashboard(request):
     return render(request,'therapist_dashboard.html')
