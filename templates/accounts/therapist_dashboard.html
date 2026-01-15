@@ -8,9 +8,9 @@
 {% block content %}
 <div class="fixed inset-0 flex bg-gray-50 overflow-hidden font-sans">
 
-    {% include 'includes/sidebar.html' %}
+    {% include 'includes/therapist_sidebar.html' %}
 
-    <main class="flex-1 overflow-y-auto bg-gray-50 p-8 w-full">
+     <main class="flex-1 overflow-y-auto bg-gray-50 p-8 w-full flex flex-col mt-16 md:mt-0">
 
         <div class="flex justify-between items-end mb-8">
             <div>
@@ -97,14 +97,18 @@
                             <td class="px-6 py-4 text-sm text-gray-500 italic">
                                 "{{ appt.notes|default:'No notes provided'|truncatechars:30 }}"
                             </td>
-                            <td class="px-6 py-4 text-right space-x-2">
-                                <button class="px-3 py-1 bg-green-500 text-white text-xs font-bold rounded shadow hover:bg-green-600 transition">
-                                    Approve
-                                </button>
-                                <button class="px-3 py-1 bg-red-100 text-red-500 text-xs font-bold rounded hover:bg-red-200 transition">
-                                    Decline
-                                </button>
-                            </td>
+                            <td class="px-6 py-4 text-right space-x-2 flex justify-end">
+                            <a href="{% url 'approve_appointment' appt.id %}"
+                               class="px-3 py-1 bg-green-500 text-white text-xs font-bold rounded shadow hover:bg-green-600 transition inline-block">
+                                Approve
+                            </a>
+
+                            <a href="{% url 'decline_appointment' appt.id %}"
+                               class="px-3 py-1 bg-red-100 text-red-500 text-xs font-bold rounded hover:bg-red-200 transition inline-block"
+                               onclick="return confirm('Are you sure you want to decline this request?');">
+                                Decline
+                            </a>
+                        </td>
                         </tr>
                         {% endfor %}
                     </tbody>
