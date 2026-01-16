@@ -1,37 +1,92 @@
 {% extends 'base.html' %}
-{% block title %}My Appointments | CMHS{% endblock %}
-{% block navbar %}{% endblock %}{% block footer %}{% endblock %}
+{% block title %}All Appointments | CMHS{% endblock %}
 
 {% block content %}
-    <div class="fixed inset-0 flex bg-gray-50 overflow-hidden font-sans">
+<div class="fixed inset-0 flex bg-gray-50 overflow-hidden font-sans">
 
-        {% include 'includes/therapist_sidebar.html' %}
+    {% include 'includes/therapist_sidebar.html' %}
 
-        <main class="flex-1 overflow-y-auto bg-gray-50 p-8 w-full flex flex-col mt-16 md:mt-0">
-            <h1 class="text-3xl font-bold text-chiromo-navy mb-6">All Appointments</h1>
+    <main class="flex-1 overflow-y-auto bg-gray-50 p-4 md:p-8 w-full flex flex-col mt-16 md:mt-0">
+        <h1 class="text-2xl md:text-3xl font-bold text-chiromo-navy mb-6">All Appointments</h1>
 
-            <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-                <table class="w-full text-left border-collapse">
-                    <thead class="bg-gray-50 text-gray-500 text-xs uppercase">
+        <div class="md:hidden space-y-4 pb-20">
+            {% for appt in appointments %}
+            <div class="bg-white p-5 rounded-xl shadow-sm border border-gray-200">
+                <div class="flex justify-between items-start mb-3">
+                    <div>
+                        <h3 class="font-bold text-chiromo-navy text-lg">{{ appt.patient.first_name }} {{ appt.patient.last_name }}</h3>
+                        <p class="text-xs text-gray-400">@{{ appt.patient.username }}</p>
+                    </div>
+                    <span class="px-2 py-1 rounded text-xs font-bold
+                        {% if appt.status == 'confirmed' %}bg-green-100 text-green-700
+                        {% elif appt.status == 'pending' %}bg-orange-100 text-orange-700
+                        {% elif appt.status == 'cancelled' %}bg-red-100 text-red-700
+                        {% else %}bg-gray-100{% endif %}">
+                        {{ appt.status|title }}
+                    </span>
+                </div>
+
+                <div class="text-sm text-gray-600 mb-4 grid grid-cols-2 gap-2">
+                    <div>
+                        <p class="text-xs text-gray-400 font-bold uppercase">Date</p>
+                        <p class="font-medium">{{ appt.date }}</p>
+                    </div>
+                    <div>
+                        <p class="text-xs text-gray-400 font-bold uppercase">Time</p>
+                        <p class="font-medium">{{ appt.time }}</p>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 gap-2">
+                    {% if appt.status == 'pending' %}
+                        <div class="grid grid-cols-2 gap-3">
+                            <a href="{% url 'approve_appointment' appt.id %}" class="text-center bg-green-500 text-white py-3 rounded-lg text-sm font-bold shadow-sm hover:bg-green-600">
+                                Approve
+                            </a>
+                            <a href="{% url 'decline_appointment' appt.id %}" class="text-center bg-red-50 text-red-500 border border-red-100 py-3 rounded-lg text-sm font-bold hover:bg-red-100">
+                                Decline
+                            </a>
+                        </div>
+                    {% elif appt.status == 'confirmed' %}
+                        <a href="{% url 'log_session' appt.id %}" class="w-full text-center bg-blue-600 text-white py-3 rounded-lg text-sm font-bold shadow-md hover:bg-blue-700">
+                            Log Session Notes
+                        </a>
+                    {% else %}
+                        <div class="w-full text-center bg-gray-50 text-gray-400 py-2 rounded-lg text-sm italic border border-gray-100">
+                            No actions needed
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+            {% empty %}
+                <div class="text-center py-10 text-gray-500 bg-white rounded-xl border border-dashed border-gray-300">
+                    <p>No appointments found.</p>
+                </div>
+            {% endfor %}
+        </div>
+
+        <div class="hidden md:block bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+            <table class="w-full text-left border-collapse">
+                <thead class="bg-gray-50 text-gray-500 text-xs uppercase tracking-wider">
                     <tr>
-                        <th class="px-6 py-4">Patient</th>
-                        <th class="px-6 py-4">Date</th>
-                        <th class="px-6 py-4">Status</th>
-                        <th class="px-6 py-4 text-right">Actions</th>
+                        <th class="px-6 py-4 font-bold">Patient</th>
+                        <th class="px-6 py-4 font-bold">Date</th>
+                        <th class="px-6 py-4 font-bold">Status</th>
+                        <th class="px-6 py-4 font-bold text-right">Actions</th>
                     </tr>
-                    </thead>
-                    <tbody class="divide-y divide-gray-100">
+                </thead>
+                <tbody class="divide-y divide-gray-100">
                     {% for appt in appointments %}
-                        <tr class="hover:bg-gray-50 transition">
-                            <td class="px-6 py-4 font-bold text-chiromo-navy">
-                                {{ appt.patient.first_name }} {{ appt.patient.last_name }}
-                                <span class="block text-xs text-gray-400 font-normal">@{{ appt.patient.username }}</span>
-                            </td>
-                            <td class="px-6 py-4">
-                                {{ appt.date }} <br>
-                                <span class="text-xs text-gray-500">{{ appt.time }}</span>
-                            </td>
-                            <td class="px-6 py-4">
+                    <tr class="hover:bg-blue-50/30 transition">
+                        <td class="px-6 py-4 font-bold text-chiromo-navy">
+                            {{ appt.patient.first_name }} {{ appt.patient.last_name }}
+                            <span class="block text-xs text-gray-400 font-normal">@{{ appt.patient.username }}</span>
+                        </td>
+                        <td class="px-6 py-4 text-gray-600">
+                            {{ appt.date }} <br>
+                            <span class="text-xs text-gray-500">{{ appt.time }}</span>
+                        </td>
+                        <td class="px-6 py-4">
                             <span class="px-2 py-1 rounded text-xs font-bold
                                 {% if appt.status == 'confirmed' %}bg-green-100 text-green-700
                                 {% elif appt.status == 'pending' %}bg-orange-100 text-orange-700
@@ -39,35 +94,24 @@
                                 {% else %}bg-gray-100{% endif %}">
                                 {{ appt.status|title }}
                             </span>
-                            </td>
-                            <td class="px-6 py-4 text-right space-x-2">
-                                {% if appt.status == 'pending' %}
-                                    <a href="{% url 'approve_appointment' appt.id %}"
-                                       class="inline-block px-3 py-1 bg-green-500 text-white text-xs font-bold rounded hover:bg-green-600 transition">Approve</a>
-                                    <a href="{% url 'decline_appointment' appt.id %}"
-                                       class="inline-block px-3 py-1 bg-red-100 text-red-500 text-xs font-bold rounded hover:bg-red-200 transition">Decline</a>
-
-                                {% elif appt.status == 'confirmed' %}
-                                    <a href="{% url 'log_session' appt.id %}"
-                                       class="inline-block px-3 py-1 bg-blue-600 text-white text-xs font-bold rounded hover:bg-blue-700 transition shadow-sm">
-                                        Log Session
-                                    </a>
-
-                                {% elif appt.status == 'completed' %}
-                                    <span class="inline-flex items-center gap-1 px-2 py-1 rounded text-xs font-bold bg-gray-100 text-gray-500 border border-gray-200">
-                                     ✓ Done
-                                    </span>
-                                {% endif %}
-                            </td>
-                        </tr>
+                        </td>
+                        <td class="px-6 py-4 text-right space-x-2">
+                            {% if appt.status == 'pending' %}
+                                <a href="{% url 'approve_appointment' appt.id %}" class="inline-block px-3 py-1 bg-green-500 text-white text-xs font-bold rounded hover:bg-green-600 transition shadow-sm">Approve</a>
+                                <a href="{% url 'decline_appointment' appt.id %}" class="inline-block px-3 py-1 bg-red-50 text-red-500 border border-red-100 text-xs font-bold rounded hover:bg-red-100 transition">Decline</a>
+                            {% elif appt.status == 'confirmed' %}
+                                <a href="{% url 'log_session' appt.id %}" class="inline-block px-3 py-1 bg-blue-600 text-white text-xs font-bold rounded hover:bg-blue-700 transition shadow-sm">Log Session</a>
+                            {% elif appt.status == 'completed' %}
+                                <span class="inline-flex items-center gap-1 px-2 py-1 rounded text-xs font-bold bg-gray-100 text-gray-500 border border-gray-200">✓ Done</span>
+                            {% endif %}
+                        </td>
+                    </tr>
                     {% empty %}
-                        <tr>
-                            <td colspan="4" class="px-6 py-12 text-center text-gray-500">No appointments found.</td>
-                        </tr>
+                    <tr><td colspan="4" class="px-6 py-12 text-center text-gray-500">No appointments found.</td></tr>
                     {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-        </main>
-    </div>
+                </tbody>
+            </table>
+        </div>
+    </main>
+</div>
 {% endblock %}
