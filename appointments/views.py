@@ -5,8 +5,8 @@ from datetime import datetime
 from django.utils import timezone
 from django.contrib import messages
 from django.db.models import Q
-from .forms import BookingForm, SessionLogForm
-from .models import Appointment, SessionLog, MoodEntry, Message, User
+from .forms import BookingForm, SessionLogForm, DepressionAssessmentForm, AnxietyAssessmentForm, BipolarAssessmentForm
+from .models import Appointment, SessionLog, MoodEntry, Message, User, AssessmentResult
 from django.core.mail import send_mail
 
 
@@ -219,4 +219,113 @@ def inbox(request, id=None):
     return render(request, 'appointments/inbox.html', {
         'messages_list': messages_list,
         'chat_partner': chat_partner
+    })
+
+
+@login_required
+def delete_message(request, msg_id):
+    # Only allow deletion if the logged-in user is the sender
+    message = get_object_or_404(Message, id=msg_id, sender=request.user)
+
+    # Store the partner's ID to redirect back to the chat
+    partner_id = message.recipient.id
+    message.delete()
+
+    messages.success(request, "Message unsent.")
+    return redirect('inbox_with_id', id=partner_id)
+
+
+@login_required
+def edit_message(request, msg_id):
+    message = get_object_or_404(Message, id=msg_id, sender=request.user)
+
+    if request.method == 'POST':
+        new_body = request.POST.get('body')
+        if new_body:
+            message.body = new_body
+            message.save()
+            messages.success(request, "Message edited.")
+
+    return redirect('inbox_with_id', id=message.recipient.id)
+
+@login_required
+def cancel_appointment(request, id):
+
+    appointment = get_object_or_404(Appointment, id=id, patient=request.user)
+
+    if appointment.status == 'pending':
+        appointment.status = 'cancelled'
+        appointment.save()
+        messages.success(request, "Appointment cancelled successfully.")
+    else:
+        messages.error(request, "You can only cancel pending appointments.")
+
+    return redirect('patient_appointments')
+
+def assessment_hub(request):
+    return render(request, 'appointments/assessment_hub.html')
+
+def take_assessment(request, test_type):
+    if test_type == 'anxiety':
+        FormClass = AnxietyAssessmentForm
+        title = "Anxiety Screening (GAD-7)"
+    elif test_type == 'bipolar':
+        FormClass = BipolarAssessmentForm
+        title = "Bipolar Disorder Screening"
+    else:
+        FormClass = DepressionAssessmentForm
+        title = "Depression Screening (PHQ-9)"
+
+    if request.method == 'POST':
+        form = FormClass(request.POST)
+        if form.is_valid():
+            total_score = 0
+            for field in form.cleaned_data:
+                total_score += int(form.cleaned_data[field])
+
+            # Simple logic for Demo purposes (Real medical logic is complex)
+            if total_score <= 4: severity = 'minimal'
+            elif total_score <= 9: severity = 'mild'
+            elif total_score <= 14: severity = 'moderate'
+            else: severity = 'severe'
+
+            if request.user.is_authenticated:
+                AssessmentResult.objects.create(
+                    patient=request.user,
+                    test_type=test_type, # Save which test it was
+                    score=total_score,
+                    severity=severity
+                )
+                return redirect('dashboard')
+            else:
+                # Guest Logic
+                request.session['guest_score'] = total_score
+                request.session['guest_severity'] = severity
+                request.session['guest_test_type'] = title
+                return redirect('public_result')
+
+    else:
+        form = FormClass()
+
+    return render(request, 'appointments/take_assessment.html', {
+        'form': form,
+        'title': title
+    })
+
+def public_result(request):
+    score = request.session.get('guest_score')
+    severity = request.session.get('guest_severity')
+
+    if score is None:
+        return redirect('assessment_hub')
+
+    # CLEAN THE TEXT HERE:
+    if severity:
+        severity_display = severity.replace('_', ' ') # Replaces underscore with space
+    else:
+        severity_display = "Unknown"
+
+    return render(request, 'appointments/public_result.html', {
+        'score': score,
+        'severity': severity_display, # Pass the clean version
     })
