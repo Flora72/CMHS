@@ -10,4 +10,11 @@ urlpatterns = [
     path('my-appointments/', views.patient_appointments, name='patient_appointments'),
     path('inbox/', views.inbox, name='inbox'),
     path('inbox/<int:id>/', views.inbox, name='inbox_with_id'),
+    path('message/delete/<int:msg_id>/', views.delete_message, name='delete_message'),
+    path('message/edit/<int:msg_id>/', views.edit_message, name='edit_message'),
+    path('cancel/<int:id>/', views.cancel_appointment, name='cancel_appointment'),
+    path('assessment/', views.assessment_hub, name='assessment_hub'),
+    path('assessment/<str:test_type>/', views.take_assessment, name='take_assessment_by_type'),
+    path('assessment/result/', views.public_result, name='public_result'),
+    path('assessment/result/public/', views.public_result, name='public_result'),
 ]
