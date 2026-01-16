@@ -1,30 +1,30 @@
 {% extends 'base.html' %}
 {% block title %}Account Settings | CMHS{% endblock %}
-{% block navbar %}{% endblock %}{% block footer %}{% endblock %}
-
+{% block navbar %}{% endblock %}
 {% block content %}
 <div class="fixed inset-0 flex bg-gray-50 overflow-hidden font-sans">
-    
+
     {% if user.role == 'therapist' %}
         {% include 'includes/therapist_sidebar.html' %}
     {% else %}
         {% include 'includes/patient_sidebar.html' %}
     {% endif %}
 
-    <main class="flex-1 overflow-y-auto bg-gray-50 p-8 w-full flex flex-col mt-16 md:mt-0">
-        <div class="max-w-2xl mx-auto">
+    <main class="flex-1 overflow-y-auto bg-gray-50 p-4 md:p-8 w-full flex flex-col mt-16 md:mt-0 pb-24">
+
+        <div class="max-w-2xl mx-auto w-full">
             <h1 class="text-3xl font-bold text-chiromo-navy mb-8">Account Settings</h1>
 
-            <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+            <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden mb-8">
                 <div class="px-6 py-4 border-b border-gray-100 bg-gray-50 flex justify-between items-center">
                     <h3 class="font-bold text-gray-800">Personal Information</h3>
                     <span class="text-xs text-gray-500 uppercase font-bold tracking-wider">Public Profile</span>
                 </div>
-                
+
                 <div class="p-6">
                     <form method="POST" class="space-y-6">
                         {% csrf_token %}
-                        
+
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div>
                                 <label class="block text-sm font-bold text-gray-700 mb-2">First Name</label>
@@ -51,18 +51,23 @@
                 </div>
             </div>
 
-            <div class="mt-8 bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+            <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
                 <div class="px-6 py-4 border-b border-gray-100 bg-gray-50">
                     <h3 class="font-bold text-gray-800">Security</h3>
                 </div>
                 <div class="p-6 flex items-center justify-between">
                     <div>
                         <p class="font-bold text-chiromo-navy">Password</p>
-                        <p class="text-sm text-gray-500">Last changed: Never</p>
+
+                        <p class="text-sm text-gray-500 flex items-center gap-1">
+                            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                            Last login: {{ user.last_login|default:"First time"|date:"M j, Y, H:i " }}
+                        </p>
                     </div>
-                    <button class="text-sm font-bold text-chiromo-gold hover:text-yellow-600 border border-chiromo-gold px-4 py-2 rounded hover:bg-yellow-50 transition">
-                        Change Password
-                    </button>
+
+                    <a href="{% url 'change_password' %}" class="text-sm font-bold text-chiromo-gold hover:text-white border border-chiromo-gold px-4 py-2 rounded hover:bg-chiromo-gold transition">
+                     Change Password
+                    </a>
                 </div>
             </div>
 
