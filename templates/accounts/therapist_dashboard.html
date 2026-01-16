@@ -1,128 +1,148 @@
 {% extends 'base.html' %}
 
-{% block title %}Therapist | CMHS{% endblock %}
-
-{% block navbar %}{% endblock %}
-{% block footer %}{% endblock %}
+{% block title %}Therapist Dashboard | CMHS{% endblock %}
 
 {% block content %}
 <div class="fixed inset-0 flex bg-gray-50 overflow-hidden font-sans">
 
     {% include 'includes/therapist_sidebar.html' %}
 
-     <main class="flex-1 overflow-y-auto bg-gray-50 p-8 w-full flex flex-col mt-16 md:mt-0">
+     <main class="flex-1 overflow-y-auto bg-gray-50 p-4 md:p-8 w-full flex flex-col mt-16 md:mt-0">
 
-        <div class="flex justify-between items-end mb-8">
+        <div class="flex flex-col md:flex-row justify-between items-start md:items-end mb-8 gap-4">
             <div>
-                <h1 class="text-3xl font-bold text-chiromo-navy">Dashboard Overview</h1>
-                <p class="text-gray-500 mt-1">Welcome back, Dr. {{ user.last_name|default:user.username }}. You have <span class="text-chiromo-gold font-bold">{{ pending_count }} pending</span> requests.</p>
+                <h1 class="text-2xl md:text-3xl font-bold text-chiromo-navy">Dashboard Overview</h1>
+                <p class="text-gray-500 mt-1">Welcome back, Dr. {{ user.last_name|default:user.username }}.</p>
             </div>
-            <div class="text-right">
-                <p class="text-sm text-gray-400 font-bold uppercase tracking-wide">Today's Date</p>
-                <p class="text-xl font-bold text-gray-700">{% now "l, d M Y" %}</p>
+            <div class="text-left md:text-right">
+                <p class="text-xs text-gray-400 font-bold uppercase tracking-wide">Today's Date</p>
+                <p class="text-lg md:text-xl font-bold text-gray-700">{% now "l, d M Y" %}</p>
             </div>
         </div>
 
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
-            <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex items-center justify-between group hover:shadow-md transition">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+            <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex items-center justify-between">
                 <div>
-                    <p class="text-xs font-bold text-gray-400 uppercase tracking-wider">Pending Approvals</p>
+                    <p class="text-xs font-bold text-gray-400 uppercase tracking-wider">Pending</p>
                     <p class="text-3xl font-bold text-chiromo-navy mt-1">{{ pending_count }}</p>
                 </div>
-                <div class="w-12 h-12 rounded-full bg-orange-50 text-orange-500 flex items-center justify-center group-hover:scale-110 transition">
+                <div class="w-12 h-12 rounded-full bg-orange-50 text-orange-500 flex items-center justify-center">
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                 </div>
             </div>
-
-            <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex items-center justify-between group hover:shadow-md transition">
+            <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex items-center justify-between">
                 <div>
                     <p class="text-xs font-bold text-gray-400 uppercase tracking-wider">Today's Sessions</p>
                     <p class="text-3xl font-bold text-chiromo-navy mt-1">{{ todays_count }}</p>
                 </div>
-                <div class="w-12 h-12 rounded-full bg-blue-50 text-blue-500 flex items-center justify-center group-hover:scale-110 transition">
+                <div class="w-12 h-12 rounded-full bg-blue-50 text-blue-500 flex items-center justify-center">
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
                 </div>
             </div>
-
-            <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex items-center justify-between group hover:shadow-md transition">
+            <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex items-center justify-between">
                 <div>
                     <p class="text-xs font-bold text-gray-400 uppercase tracking-wider">Active Patients</p>
                     <p class="text-3xl font-bold text-chiromo-navy mt-1">{{ total_patients }}</p>
                 </div>
-                <div class="w-12 h-12 rounded-full bg-green-50 text-green-500 flex items-center justify-center group-hover:scale-110 transition">
+                <div class="w-12 h-12 rounded-full bg-green-50 text-green-500 flex items-center justify-center">
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
                 </div>
             </div>
         </div>
 
-        <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-            <div class="px-6 py-4 border-b border-gray-100 flex justify-between items-center">
-                <h3 class="font-bold text-lg text-chiromo-navy">Pending Requests</h3>
-            </div>
+        <h3 class="font-bold text-xl text-chiromo-navy mb-4">Pending Requests</h3>
 
-            <div class="p-0">
-                {% if pending_requests %}
-                <table class="w-full text-left border-collapse">
-                    <thead>
-                        <tr class="bg-gray-50 text-gray-500 text-xs uppercase tracking-wider">
-                            <th class="px-6 py-4 font-bold">Patient Name</th>
-                            <th class="px-6 py-4 font-bold">Date & Time</th>
-                            <th class="px-6 py-4 font-bold">Mode</th>
-                            <th class="px-6 py-4 font-bold">Notes</th>
-                            <th class="px-6 py-4 font-bold text-right">Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody class="divide-y divide-gray-100">
-                        {% for appt in pending_requests %}
-                        <tr class="hover:bg-blue-50/50 transition">
-                            <td class="px-6 py-4 font-medium text-chiromo-navy">
-                                {{ appt.patient.first_name }} {{ appt.patient.last_name }}
-                                <br><span class="text-xs text-gray-400">@{{ appt.patient.username }}</span>
-                            </td>
-                            <td class="px-6 py-4 text-gray-600">
-                                {{ appt.date }} <br>
-                                <span class="text-xs font-bold bg-gray-100 px-2 py-1 rounded">{{ appt.time }}</span>
-                            </td>
-                            <td class="px-6 py-4">
-                                {% if appt.mode == 'online' %}
-                                    <span class="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-bold bg-purple-100 text-purple-700">
-                                        📹 Online
-                                    </span>
-                                {% else %}
-                                    <span class="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-bold bg-blue-100 text-blue-700">
-                                        🏥 In-Person
-                                    </span>
-                                {% endif %}
-                            </td>
-                            <td class="px-6 py-4 text-sm text-gray-500 italic">
-                                "{{ appt.notes|default:'No notes provided'|truncatechars:30 }}"
-                            </td>
-                            <td class="px-6 py-4 text-right space-x-2 flex justify-end">
-                            <a href="{% url 'approve_appointment' appt.id %}"
-                               class="px-3 py-1 bg-green-500 text-white text-xs font-bold rounded shadow hover:bg-green-600 transition inline-block">
+        <div class="md:hidden space-y-4 pb-20">
+            {% for appt in pending_requests %}
+            <div class="bg-white p-5 rounded-xl shadow-sm border border-gray-200">
+                <div class="flex justify-between items-start mb-3">
+                    <div>
+                        <h4 class="font-bold text-chiromo-navy text-lg">{{ appt.patient.first_name }} {{ appt.patient.last_name }}</h4>
+                        <p class="text-xs text-gray-400">@{{ appt.patient.username }}</p>
+                    </div>
+                    {% if appt.mode == 'online' %}
+                        <span class="px-2 py-1 rounded-lg text-xs font-bold bg-purple-100 text-purple-700">Online</span>
+                    {% else %}
+                        <span class="px-2 py-1 rounded-lg text-xs font-bold bg-blue-100 text-blue-700">In-Person</span>
+                    {% endif %}
+                </div>
+
+                <div class="text-sm text-gray-600 mb-4 space-y-1">
+                    <p><span class="font-bold">Date:</span> {{ appt.date }}</p>
+                    <p><span class="font-bold">Time:</span> {{ appt.time }}</p>
+                    {% if appt.notes %}
+                        <div class="mt-2 bg-gray-50 p-2 rounded text-xs italic text-gray-500 border border-gray-100">
+                            "{{ appt.notes|truncatechars:50 }}"
+                        </div>
+                    {% endif %}
+                </div>
+
+                <div class="grid grid-cols-2 gap-3">
+                    <a href="{% url 'approve_appointment' appt.id %}" class="flex items-center justify-center bg-green-500 text-white py-3 rounded-lg font-bold text-sm shadow-sm hover:bg-green-600">
+                        Approve
+                    </a>
+                    <a href="{% url 'decline_appointment' appt.id %}" onclick="return confirm('Decline this request?');" class="flex items-center justify-center bg-red-50 text-red-500 border border-red-100 py-3 rounded-lg font-bold text-sm hover:bg-red-100">
+                        Decline
+                    </a>
+                </div>
+            </div>
+            {% empty %}
+            <div class="text-center py-10 text-gray-500 bg-white rounded-xl border border-dashed">
+                <p>No pending requests.</p>
+            </div>
+            {% endfor %}
+        </div>
+
+        <div class="hidden md:block bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+            {% if pending_requests %}
+            <table class="w-full text-left border-collapse">
+                <thead class="bg-gray-50 text-gray-500 text-xs uppercase tracking-wider">
+                    <tr>
+                        <th class="px-6 py-4 font-bold">Patient</th>
+                        <th class="px-6 py-4 font-bold">Date & Time</th>
+                        <th class="px-6 py-4 font-bold">Mode</th>
+                        <th class="px-6 py-4 font-bold">Notes</th>
+                        <th class="px-6 py-4 font-bold text-right">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-100">
+                    {% for appt in pending_requests %}
+                    <tr class="hover:bg-blue-50/30 transition">
+                        <td class="px-6 py-4 font-medium text-chiromo-navy">
+                            {{ appt.patient.first_name }} {{ appt.patient.last_name }}
+                            <div class="text-xs text-gray-400">@{{ appt.patient.username }}</div>
+                        </td>
+                        <td class="px-6 py-4 text-gray-600">
+                            {{ appt.date }} <br>
+                            <span class="text-xs font-bold bg-gray-100 px-2 py-1 rounded">{{ appt.time }}</span>
+                        </td>
+                        <td class="px-6 py-4">
+                            {% if appt.mode == 'online' %}
+                                <span class="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-bold bg-purple-100 text-purple-700">Online</span>
+                            {% else %}
+                                <span class="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-bold bg-blue-100 text-blue-700">In-Person</span>
+                            {% endif %}
+                        </td>
+                        <td class="px-6 py-4 text-sm text-gray-500 italic max-w-xs truncate">
+                            "{{ appt.notes|default:'No notes' }}"
+                        </td>
+                        <td class="px-6 py-4 text-right space-x-2">
+                            <a href="{% url 'approve_appointment' appt.id %}" class="px-4 py-1.5 bg-green-500 text-white text-xs font-bold rounded hover:bg-green-600 transition inline-block shadow-sm">
                                 Approve
                             </a>
-
-                            <a href="{% url 'decline_appointment' appt.id %}"
-                               class="px-3 py-1 bg-red-100 text-red-500 text-xs font-bold rounded hover:bg-red-200 transition inline-block"
-                               onclick="return confirm('Are you sure you want to decline this request?');">
+                            <a href="{% url 'decline_appointment' appt.id %}" onclick="return confirm('Are you sure?');" class="px-4 py-1.5 bg-red-50 text-red-500 border border-red-100 text-xs font-bold rounded hover:bg-red-100 transition inline-block">
                                 Decline
                             </a>
                         </td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-                {% else %}
-                <div class="p-12 text-center">
-                    <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gray-50 text-gray-300 mb-4">
-                        <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
-                    </div>
-                    <h3 class="text-lg font-medium text-gray-900">All caught up!</h3>
-                    <p class="mt-1 text-gray-500">No pending requests at the moment.</p>
-                </div>
-                {% endif %}
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+            <div class="p-12 text-center text-gray-500">
+                <p>No pending requests at the moment.</p>
             </div>
+            {% endif %}
         </div>
 
     </main>
