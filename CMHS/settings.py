@@ -13,8 +13,7 @@ SECRET_KEY = 'django-insecure-zu_@phyfzk+vi&xu&v26k9*zefpv!hy%j$!%gz^&l-dgnc1c6!
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
-
+ALLOWED_HOSTS = ['*']
 
 # Application definition
 
@@ -93,16 +92,17 @@ AUTH_PASSWORD_VALIDATORS = [
 
 # Internationalization
 # https://docs.djangoproject.com/en/6.0/topics/i18n/
+# cmhs/settings.py
 
 LANGUAGE_CODE = 'en-us'
 
-TIME_ZONE = 'UTC'
+TIME_ZONE = 'Africa/Nairobi'
 
 USE_I18N = True
 
+# KEEP THIS AS TRUE
+# This tells Django: "Store dates in UTC database, but convert them to Nairobi time when showing the user."
 USE_TZ = True
-
-
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/6.0/howto/static-files/
 
