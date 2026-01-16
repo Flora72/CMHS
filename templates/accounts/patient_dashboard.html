@@ -6,163 +6,132 @@
 {% block footer %}{% endblock %}
 
 {% block content %}
-    <div class="fixed inset-0 flex bg-gray-50 overflow-hidden font-sans">
+<div class="fixed inset-0 flex bg-gray-50 overflow-hidden font-sans">
 
-        <div class="md:hidden fixed top-0 w-full bg-chiromo-navy text-white z-50 flex justify-between items-center px-4 h-16 shadow-md">
-            <span class="font-bold text-lg text-chiromo-gold">CMHS Portal</span>
-            <button onclick="document.getElementById('mobile-menu').classList.toggle('hidden')"
-                    class="text-white focus:outline-none">
-                <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                          d="M4 6h16M4 12h16M4 18h16"></path>
-                </svg>
+    <div class="md:hidden fixed top-0 w-full bg-chiromo-navy text-white z-50 flex justify-between items-center px-4 h-16 shadow-md">
+        <span class="font-bold text-lg text-chiromo-gold">CMHS Portal</span>
+        <button onclick="document.getElementById('mobile-menu').classList.toggle('hidden')" class="text-white focus:outline-none">
+            <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
+        </button>
+    </div>
+
+    <div id="mobile-menu" class="hidden md:hidden fixed inset-0 z-40 bg-chiromo-navy bg-opacity-95 pt-20 px-6 transition-all duration-300">
+        <div class="flex flex-col space-y-4">
+            <a href="{% url 'dashboard' %}" class="text-white text-xl font-bold border-b border-gray-600 pb-2">Dashboard</a>
+            <a href="{% url 'calendar' %}" class="text-gray-300 text-xl">Calendar</a>
+            <a href="{% url 'inbox' %}" class="text-gray-300 text-xl">Messages</a>
+            <a href="{% url 'patient_resources' %}" class="text-gray-300 text-xl">Resources</a>
+            <form action="{% url 'logout' %}" method="post">
+                {% csrf_token %}
+                <button type="submit" class="text-red-400 text-xl mt-4">Logout</button>
+            </form>
+            <button onclick="document.getElementById('mobile-menu').classList.add('hidden')" class="absolute top-4 right-4 text-white">
+                <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
             </button>
         </div>
+    </div>
 
-        <div id="mobile-menu"
-             class="hidden md:hidden fixed inset-0 z-40 bg-chiromo-navy bg-opacity-95 pt-20 px-6 transition-all duration-300">
-            <div class="flex flex-col space-y-4">
-                <a href="{% url 'dashboard' %}" class="text-white text-xl font-bold border-b border-gray-600 pb-2">Dashboard</a>
-                <a href="{% url 'calendar' %}" class="text-gray-300 text-xl">Calendar</a>
-                <a href="#" class="text-gray-300 text-xl">Messages</a>
-                <a href="#" class="text-gray-300 text-xl">Resources</a>
-                <form action="{% url 'logout' %}" method="post">
-                    {% csrf_token %}
-                    <button type="submit" class="text-red-400 text-xl mt-4">Logout</button>
-                </form>
-                <button onclick="document.getElementById('mobile-menu').classList.add('hidden')"
-                        class="absolute top-4 right-4 text-white">
-                    <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                              d="M6 18L18 6M6 6l12 12"></path>
-                    </svg>
-                </button>
-            </div>
-        </div>
+    {% include 'includes/patient_sidebar.html' %}
 
-        {% include 'includes/patient_sidebar.html' %}
+    <main class="flex-1 overflow-y-auto mt-16 md:mt-0 p-4 md:p-8 w-full">
+        <div class="max-w-7xl mx-auto">
 
-        <main class="flex-1 overflow-y-auto mt-16 md:mt-0 p-4 md:p-8 w-full">
-            <div class="max-w-7xl mx-auto">
-
-                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 gap-4">
-                    <div>
-                        <h1 class="text-3xl font-bold text-chiromo-navy">Welcome, {{ user.username|title }}</h1>
-                        <p class="text-gray-500 mt-1">Here is your daily overview</p>
-                    </div>
-                    <div class="flex items-center gap-4">
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 gap-4">
+                <div>
+                    <h1 class="text-3xl font-bold text-chiromo-navy">Welcome, {{ user.first_name|default:user.username }}</h1>
+                    <p class="text-gray-500 mt-1">Here is your daily overview</p>
+                </div>
+                <div class="flex items-center gap-4">
                     <span class="px-4 py-2 bg-green-100 text-green-800 rounded-full text-sm font-semibold border border-green-200 shadow-sm flex items-center gap-2">
                         <span class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
                         Active Patient
                     </span>
-                    </div>
                 </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
 
                 <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 h-full flex flex-col justify-between">
-                    <div class="flex justify-between items-start mb-4">
-                        <div>
-                            <h3 class="font-bold text-chiromo-navy text-lg">Daily Wellness</h3>
-                            <p class="text-xs text-gray-400">How are you feeling today?</p>
-                        </div>
-                        <span class="bg-gray-100 text-gray-600 text-xs font-bold px-2 py-1 rounded">Today</span>
-                    </div>
-
-                    {% if todays_mood %}
-                        <div class="flex flex-col items-center justify-center py-4 bg-green-50 rounded-lg border border-green-100">
-                            <div class="text-3xl mb-2">
-                                {% if todays_mood.mood == 'great' %}😁{% elif todays_mood.mood == 'okay' %}
-                                    🙂{% elif todays_mood.mood == 'low' %}😔{% else %}😫{% endif %}
+                    <div>
+                        <div class="flex justify-between items-start mb-4">
+                            <div>
+                                <h3 class="font-bold text-chiromo-navy text-lg">Daily Wellness</h3>
+                                <p class="text-xs text-gray-400">How are you feeling?</p>
                             </div>
-                            <p class="text-green-800 font-bold text-sm">Log Saved!</p>
-                            <p class="text-green-600 text-xs">Thanks for checking in.</p>
+                            <span class="bg-gray-100 text-gray-600 text-xs font-bold px-2 py-1 rounded">Today</span>
                         </div>
-                    {% else %}
-                        <div class="flex justify-between items-center gap-2">
-                            <a href="{% url 'log_mood' 'great' %}"
-                               class="flex flex-col items-center gap-1 group w-full">
-                                <div class="w-10 h-10 rounded-full bg-green-50 flex items-center justify-center text-xl group-hover:bg-green-100 group-hover:scale-110 transition cursor-pointer">
-                                    😁
-                                </div>
-                                <span class="text-[10px] font-bold text-gray-400 group-hover:text-green-600">Great</span>
-                            </a>
-                            <a href="{% url 'log_mood' 'okay' %}" class="flex flex-col items-center gap-1 group w-full">
-                                <div class="w-10 h-10 rounded-full bg-yellow-50 flex items-center justify-center text-xl group-hover:bg-yellow-100 group-hover:scale-110 transition cursor-pointer">
-                                    🙂
-                                </div>
-                                <span class="text-[10px] font-bold text-gray-400 group-hover:text-yellow-600">Okay</span>
-                            </a>
-                            <a href="{% url 'log_mood' 'low' %}" class="flex flex-col items-center gap-1 group w-full">
-                                <div class="w-10 h-10 rounded-full bg-orange-50 flex items-center justify-center text-xl group-hover:bg-orange-100 group-hover:scale-110 transition cursor-pointer">
-                                    😔
-                                </div>
-                                <span class="text-[10px] font-bold text-gray-400 group-hover:text-orange-600">Low</span>
-                            </a>
-                            <a href="{% url 'log_mood' 'bad' %}" class="flex flex-col items-center gap-1 group w-full">
-                                <div class="w-10 h-10 rounded-full bg-red-50 flex items-center justify-center text-xl group-hover:bg-red-100 group-hover:scale-110 transition cursor-pointer">
-                                    😫
-                                </div>
-                                <span class="text-[10px] font-bold text-gray-400 group-hover:text-red-600">Bad</span>
-                            </a>
-                        </div>
-                    {% endif %}
 
-                    <a href="{% url 'book_appointment' %}"
-                       class="mt-6 flex items-center justify-between text-sm font-bold text-chiromo-navy hover:text-chiromo-gold transition group">
+                        {% if todays_mood %}
+                            <div class="flex flex-col items-center justify-center py-4 bg-green-50 rounded-lg border border-green-100">
+                                <div class="text-3xl mb-2">
+                                    {% if todays_mood.mood == 'great' %}😁{% elif todays_mood.mood == 'okay' %}🙂{% elif todays_mood.mood == 'low' %}😔{% else %}😫{% endif %}
+                                </div>
+                                <p class="text-green-800 font-bold text-sm">Log Saved!</p>
+                            </div>
+                        {% else %}
+                            <div class="flex justify-between items-center gap-2">
+                                <a href="{% url 'log_mood' 'great' %}" class="flex flex-col items-center gap-1 group w-full">
+                                    <div class="w-10 h-10 rounded-full bg-green-50 flex items-center justify-center text-xl group-hover:bg-green-100 group-hover:scale-110 transition cursor-pointer">😁</div>
+                                    <span class="text-[10px] font-bold text-gray-400 group-hover:text-green-600">Great</span>
+                                </a>
+                                <a href="{% url 'log_mood' 'okay' %}" class="flex flex-col items-center gap-1 group w-full">
+                                    <div class="w-10 h-10 rounded-full bg-yellow-50 flex items-center justify-center text-xl group-hover:bg-yellow-100 group-hover:scale-110 transition cursor-pointer">🙂</div>
+                                    <span class="text-[10px] font-bold text-gray-400 group-hover:text-yellow-600">Okay</span>
+                                </a>
+                                <a href="{% url 'log_mood' 'low' %}" class="flex flex-col items-center gap-1 group w-full">
+                                    <div class="w-10 h-10 rounded-full bg-orange-50 flex items-center justify-center text-xl group-hover:bg-orange-100 group-hover:scale-110 transition cursor-pointer">😔</div>
+                                    <span class="text-[10px] font-bold text-gray-400 group-hover:text-orange-600">Low</span>
+                                </a>
+                                <a href="{% url 'log_mood' 'bad' %}" class="flex flex-col items-center gap-1 group w-full">
+                                    <div class="w-10 h-10 rounded-full bg-red-50 flex items-center justify-center text-xl group-hover:bg-red-100 group-hover:scale-110 transition cursor-pointer">😫</div>
+                                    <span class="text-[10px] font-bold text-gray-400 group-hover:text-red-600">Bad</span>
+                                </a>
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <a href="{% url 'book_appointment' %}" class="mt-6 flex items-center justify-between text-sm font-bold text-chiromo-navy hover:text-chiromo-gold transition group">
                         <span>Book a Therapy Session</span>
-                        <svg class="w-4 h-4 group-hover:translate-x-1 transition" fill="none" stroke="currentColor"
-                             viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                  d="M17 8l4 4m0 0l-4 4m4-4H3"></path>
-                        </svg>
+                        <svg class="w-4 h-4 group-hover:translate-x-1 transition" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"></path></svg>
                     </a>
                 </div>
 
-                <div class="border-t border-gray-200 pt-4 mt-2">
-                    <a href="{% url 'book_appointment' %}"
-                       class="flex items-center justify-between text-sm font-semibold text-chiromo-navy hover:text-chiromo-gold transition">
-                        <span>Book a Therapy Session</span>
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                  d="M17 8l4 4m0 0l-4 4m4-4H3"></path>
-                        </svg>
+                <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition duration-300 h-full flex flex-col justify-between">
+                    <div>
+                        <div class="flex items-center justify-between mb-4">
+                            <div class="bg-blue-50 p-3 rounded-full text-chiromo-navy">
+                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"></path></svg>
+                            </div>
+                            {% if unread_count > 0 %}
+                                <span class="bg-red-100 text-red-600 text-xs font-bold px-2 py-1 rounded-full">New</span>
+                            {% endif %}
+                        </div>
+                        <h3 class="text-lg font-bold text-chiromo-navy">Messages</h3>
+                        <p class="text-sm text-gray-500 mt-2">You have <span class="font-bold text-gray-800">{{ unread_count }}</span> unread messages.</p>
+                    </div>
+                    <a href="{% url 'inbox' %}" class="w-full mt-4 block text-center py-2 rounded-lg border border-chiromo-navy text-chiromo-navy font-bold hover:bg-chiromo-navy hover:text-white transition text-sm">
+                        View Messages
                     </a>
                 </div>
-            </div>
-            <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200 hover:shadow-lg transition duration-300">
-                <div class="flex items-center justify-between mb-4">
-                    <div class="bg-blue-100 p-3 rounded-full text-chiromo-navy">
-                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                  d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"></path>
-                        </svg>
+
+                <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition duration-300 h-full flex flex-col justify-between">
+                    <div>
+                        <div class="flex items-center justify-between mb-4">
+                            <div class="bg-teal-50 p-3 rounded-full text-teal-600">
+                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path></svg>
+                            </div>
+                        </div>
+                        <h3 class="text-lg font-bold text-chiromo-navy">Wellness Library</h3>
+                        <p class="text-sm text-gray-500 mt-2">Access your journals, session notes, and guides.</p>
                     </div>
-                    <span class="bg-red-100 text-red-600 text-xs font-bold px-2 py-1 rounded-full">New</span>
+                    <a href="{% url 'patient_resources' %}" class="w-full mt-4 block text-center border border-gray-300 text-gray-600 py-2 rounded-lg text-sm font-bold hover:bg-gray-50 transition">
+                        Open Library
+                    </a>
                 </div>
-                <h3 class="text-lg font-bold text-chiromo-navy"><a href="{% url 'inbox' %}"
-                                                                   class="w-full block text-center py-2 rounded border border-chiromo-navy text-chiromo-navy font-bold hover:bg-chiromo-navy hover:text-white transition">
-                    View Messages
-                </a></h3>
-              <p class="text-sm text-gray-500 mb-4">You have {{ unread_count }} unread messages from your therapist.</p>
-                <button class="w-full border border-chiromo-navy text-chiromo-navy py-2 rounded-lg text-sm font-semibold hover:bg-blue-50 transition">
-                    View Messages
-                </button>
+
             </div>
 
-            <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200 hover:shadow-lg transition duration-300">
-                <div class="flex items-center justify-between mb-4">
-                    <div class="bg-gray-100 p-3 rounded-full text-gray-600">
-                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                  d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path>
-                        </svg>
-                    </div>
-                </div>
-                <h3 class="text-lg font-bold text-chiromo-navy">Resources</h3>
-                <p class="text-sm text-gray-500 mt-2 mb-4">Access journals, session notes, and wellness guides.</p>
-                <button class="w-full border border-gray-300 text-gray-600 py-2 rounded-lg text-sm font-semibold hover:bg-gray-50 transition">
-                    View Library
-                </button>
-            </div>
-        </main>
-    </div>
+        </div>
+    </main>
+</div>
 {% endblock %}
