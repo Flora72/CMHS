@@ -1,0 +1,90 @@
+{% extends 'base.html' %}
+{% block title %}Select Assessment | CMHS{% endblock %}
+
+{% block navbar %}
+<nav class="bg-white border-b border-gray-100 text-chiromo-navy p-4 flex justify-between items-center sticky top-0 z-50 shadow-sm">
+    <span class="font-bold text-xl flex items-center gap-2">
+        <div class="w-8 h-8 bg-chiromo-gold rounded flex items-center justify-center text-white">C</div>
+        CMHS Portal
+    </span>
+    <a href="{% url 'home' %}" class="text-sm font-bold text-gray-500 hover:text-chiromo-navy transition">
+        &larr; Back to Home
+    </a>
+</nav>
+{% endblock %}
+
+{% block content %}
+<div class="bg-gray-50 min-h-screen py-16 px-4 font-sans">
+    <div class="max-w-6xl mx-auto">
+
+        <div class="text-center mb-16">
+            <span class="bg-blue-100 text-chiromo-navy text-xs font-bold px-3 py-1 rounded-full uppercase tracking-widest border border-blue-200">
+                Self-Screening Tools
+            </span>
+            <h1 class="text-4xl md:text-5xl font-bold text-chiromo-navy mt-6 mb-4">What would you like to check?</h1>
+            <p class="text-gray-500 max-w-2xl mx-auto text-lg leading-relaxed">
+                Select a category below to start your confidential self-assessment. <br class="hidden md:block">
+                These tests are preliminary screening tools to help you understand your mental well-being.
+            </p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+
+            <a href="{% url 'take_assessment_by_type' 'depression' %}" class="group relative bg-white rounded-2xl p-8 border border-gray-100 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 flex flex-col h-full">
+                <div class="w-16 h-16 rounded-2xl bg-blue-50 flex items-center justify-center mb-6 group-hover:bg-chiromo-navy group-hover:scale-110 transition-all duration-300">
+                    <svg class="w-8 h-8 text-blue-600 group-hover:text-chiromo-gold transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z"></path>
+                    </svg>
+                </div>
+
+                <h3 class="text-2xl font-bold text-chiromo-navy mb-3 group-hover:text-blue-600 transition-colors">Depression</h3>
+                <p class="text-gray-500 mb-8 flex-grow">Feeling down, hopeless, or having little interest in doing things you used to enjoy?</p>
+
+                <div class="flex items-center text-sm font-bold text-gray-400 group-hover:text-chiromo-gold transition-colors mt-auto">
+                    Start PHQ-9 Assessment
+                    <svg class="w-4 h-4 ml-2 transform group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"></path></svg>
+                </div>
+            </a>
+
+            <a href="{% url 'take_assessment_by_type' 'anxiety' %}" class="group relative bg-white rounded-2xl p-8 border border-gray-100 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 flex flex-col h-full">
+                <div class="w-16 h-16 rounded-2xl bg-orange-50 flex items-center justify-center mb-6 group-hover:bg-chiromo-navy group-hover:scale-110 transition-all duration-300">
+                    <svg class="w-8 h-8 text-orange-500 group-hover:text-chiromo-gold transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+                    </svg>
+                </div>
+
+                <h3 class="text-2xl font-bold text-chiromo-navy mb-3 group-hover:text-orange-500 transition-colors">Anxiety</h3>
+                <p class="text-gray-500 mb-8 flex-grow">Feeling nervous, restless, or finding it difficult to stop worrying about daily events?</p>
+
+                <div class="flex items-center text-sm font-bold text-gray-400 group-hover:text-chiromo-gold transition-colors mt-auto">
+                    Start GAD-7 Assessment
+                    <svg class="w-4 h-4 ml-2 transform group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"></path></svg>
+                </div>
+            </a>
+
+            <a href="{% url 'take_assessment_by_type' 'bipolar' %}" class="group relative bg-white rounded-2xl p-8 border border-gray-100 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 flex flex-col h-full">
+                <div class="w-16 h-16 rounded-2xl bg-purple-50 flex items-center justify-center mb-6 group-hover:bg-chiromo-navy group-hover:scale-110 transition-all duration-300">
+                    <svg class="w-8 h-8 text-purple-600 group-hover:text-chiromo-gold transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"></path>
+                    </svg>
+                </div>
+
+                <h3 class="text-2xl font-bold text-chiromo-navy mb-3 group-hover:text-purple-600 transition-colors">Mood Swings</h3>
+                <p class="text-gray-500 mb-8 flex-grow">Experiencing extreme highs and lows in energy, activity, or sleep patterns?</p>
+
+                <div class="flex items-center text-sm font-bold text-gray-400 group-hover:text-chiromo-gold transition-colors mt-auto">
+                    Start Mood Assessment
+                    <svg class="w-4 h-4 ml-2 transform group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"></path></svg>
+                </div>
+            </a>
+
+        </div>
+
+        <div class="mt-16 text-center border-t border-gray-200 pt-8">
+            <p class="text-xs text-gray-400">
+                <span class="font-bold text-chiromo-navy">Note:</span> These results are not a medical diagnosis. If you are in crisis, please visit our hospital immediately or call our emergency line.
+            </p>
+        </div>
+    </div>
+</div>
+{% endblock %}
