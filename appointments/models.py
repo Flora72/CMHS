@@ -1,7 +1,5 @@
-
 from django.db import models
 from django.conf import settings
-
 from accounts.models import User
 
 
@@ -20,6 +18,7 @@ class Appointment(models.Model):
     ]
 
     patient = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='patient_appointments')
+    meeting_link = models.URLField(max_length=200, blank=True, null=True, help_text="Zoom/Google Meet link")
     therapist = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE,
                                   related_name='therapist_appointments')
 
@@ -96,3 +95,29 @@ class Message(models.Model):
 
     def __str__(self):
         return f"From {self.sender} to {self.recipient}"
+
+class AssessmentResult(models.Model):
+    SEVERITY_CHOICES = [
+        ('minimal', 'Minimal'),
+        ('mild', 'Mild'),
+        ('moderate', 'Moderate'),
+        ('moderately_severe', 'Moderately Severe'),
+        ('severe', 'Severe'),
+    ]
+
+    # NEW FIELD: Which test was this?
+    TEST_TYPES = [
+        ('depression', 'Depression (PHQ-9)'),
+        ('anxiety', 'Anxiety (GAD-7)'),
+        ('bipolar', 'Bipolar Disorder'),
+        ('substance', 'Substance Use'),
+    ]
+
+    patient = models.ForeignKey(User, on_delete=models.CASCADE, related_name='assessments', null=True, blank=True)
+    test_type = models.CharField(max_length=20, choices=TEST_TYPES, default='depression')  # <--- New Field
+    score = models.IntegerField()
+    severity = models.CharField(max_length=20, choices=SEVERITY_CHOICES)
+    date_taken = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.patient} - {self.test_type} ({self.score})"
