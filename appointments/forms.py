@@ -42,3 +42,34 @@ class SessionLogForm(forms.ModelForm):
                 'class': 'w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-chiromo-navy hover:file:bg-blue-100',
             })
         }
+
+CHOICES_FREQ = [
+    ('0', 'Not at all'),
+    ('1', 'Several days'),
+    ('2', 'More than half the days'),
+    ('3', 'Nearly every day'),
+]
+
+TAILWIND_RADIO = forms.RadioSelect(attrs={'class': 'peer sr-only'})
+
+class DepressionAssessmentForm(forms.Form):
+    q1 = forms.ChoiceField(label="1. Little interest or pleasure in doing things?", choices=CHOICES_FREQ, widget=TAILWIND_RADIO)
+    q2 = forms.ChoiceField(label="2. Feeling down, depressed, or hopeless?", choices=CHOICES_FREQ, widget=TAILWIND_RADIO)
+    q3 = forms.ChoiceField(label="3. Trouble falling or staying asleep, or sleeping too much?", choices=CHOICES_FREQ, widget=TAILWIND_RADIO)
+    q4 = forms.ChoiceField(label="4. Feeling tired or having little energy?", choices=CHOICES_FREQ, widget=TAILWIND_RADIO)
+    q5 = forms.ChoiceField(label="5. Poor appetite or overeating?", choices=CHOICES_FREQ, widget=TAILWIND_RADIO)
+
+class AnxietyAssessmentForm(forms.Form):
+    q1 = forms.ChoiceField(label="1. Feeling nervous, anxious, or on edge?", choices=CHOICES_FREQ, widget=TAILWIND_RADIO)
+    q2 = forms.ChoiceField(label="2. Not being able to stop or control worrying?", choices=CHOICES_FREQ, widget=TAILWIND_RADIO)
+    q3 = forms.ChoiceField(label="3. Worrying too much about different things?", choices=CHOICES_FREQ, widget=TAILWIND_RADIO)
+    q4 = forms.ChoiceField(label="4. Trouble relaxing?", choices=CHOICES_FREQ, widget=TAILWIND_RADIO)
+    q5 = forms.ChoiceField(label="5. Being so restless that it is hard to sit still?", choices=CHOICES_FREQ, widget=TAILWIND_RADIO)
+
+class BipolarAssessmentForm(forms.Form):
+    CHOICES_YESNO = [('0', 'No'), ('1', 'Yes')]
+    q1 = forms.ChoiceField(label="1. Has there ever been a period where you felt so good/hyper that you got into trouble?", choices=CHOICES_YESNO, widget=TAILWIND_RADIO)
+    q2 = forms.ChoiceField(label="2. During this time, did you need less sleep than usual?", choices=CHOICES_YESNO, widget=TAILWIND_RADIO)
+    q3 = forms.ChoiceField(label="3. Were you more talkative or did you speak faster than usual?", choices=CHOICES_YESNO, widget=TAILWIND_RADIO)
+    q4 = forms.ChoiceField(label="4. Did you spend money purely on impulse?", choices=CHOICES_YESNO, widget=TAILWIND_RADIO)
+    q5 = forms.ChoiceField(label="5. Did you experience racing thoughts?", choices=CHOICES_YESNO, widget=TAILWIND_RADIO)
