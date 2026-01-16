@@ -19,6 +19,7 @@
         <a href="{% url 'therapist_appointments' %}" class="text-white text-xl font-medium border-b border-blue-900 pb-2 hover:text-chiromo-gold">Appointments</a>
         <a href="{% url 'therapist_patients' %}" class="text-white text-xl font-medium border-b border-blue-900 pb-2 hover:text-chiromo-gold">My Patients</a>
         <a href="{% url 'inbox' %}" class="text-white text-xl font-medium border-b border-blue-900 pb-2 hover:text-chiromo-gold">Messages</a>
+        <a href="{% url 'settings' %}" class="text-white text-xl font-medium border-b border-blue-900 pb-2 hover:text-chiromo-gold">Settings</a>
 
         <form action="{% url 'logout' %}" method="post" class="mt-8">
             {% csrf_token %}
