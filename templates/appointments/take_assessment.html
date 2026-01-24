@@ -1,85 +1,91 @@
 {% extends 'base.html' %}
-{% block title %}{{ title }} | CMHS{% endblock %}
+{% block title %}Self Assessment | CMHS{% endblock %}
 
 {% block navbar %}
-<nav class="bg-white border-b border-gray-100 text-chiromo-navy p-4 flex justify-between items-center sticky top-0 z-50 shadow-sm">
-    <span class="font-bold text-xl flex items-center gap-2">
-        <div class="w-8 h-8 bg-chiromo-gold rounded flex items-center justify-center text-white">C</div>
-        CMHS Portal
-    </span>
-    <a href="{% url 'home' %}" class="text-sm font-bold text-gray-500 hover:text-chiromo-navy transition">
-        &larr; Exit Assessment
+<nav class="bg-white/90 backdrop-blur-md border-b border-gray-200 py-3 px-6 flex justify-between items-center sticky top-0 z-50 transition-all">
+    <div class="flex items-center gap-3">
+        <div class="w-8 h-8 bg-[#005691] rounded-lg flex items-center justify-center text-white font-bold text-lg shadow-sm">C</div>
+        <div>
+            <span class="block font-bold text-sm text-[#005691] uppercase tracking-wide">Assessment</span>
+            <span class="block text-xs text-gray-400">Step-by-step Screening</span>
+        </div>
+    </div>
+
+    <a href="{% url 'assessment_hub' %}" class="group flex items-center gap-2 px-4 py-2 rounded-full bg-gray-50 hover:bg-gray-100 text-gray-500 hover:text-red-500 transition-all text-sm font-bold">
+        <span>Exit</span>
+        <svg class="w-4 h-4 transition-transform group-hover:translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"></path></svg>
     </a>
 </nav>
 {% endblock %}
 
 {% block content %}
-<div class="bg-gray-50 min-h-screen font-sans pb-20">
+<div class="min-h-screen bg-gray-50 font-sans pb-32">
 
-    <div class="bg-chiromo-navy pt-16 pb-16 px-6 text-center relative overflow-hidden shadow-md">
-        <div class="absolute top-0 left-1/2 transform -translate-x-1/2 w-[800px] h-[800px] bg-blue-900 rounded-full opacity-20 blur-3xl -z-0 pointer-events-none"></div>
-
-        <div class="relative z-10">
-            <h1 class="text-3xl md:text-5xl font-bold text-white mt-6 mb-4 leading-tight">{{ title }}</h1>
-            <p class="text-blue-100/80 text-lg max-w-2xl mx-auto font-light">
-                Please answer the following questions based on how you have felt over the <strong class="text-white">last 2 weeks</strong>.
-            </p>
-        </div>
+    <div class="max-w-3xl mx-auto px-4 pt-10 pb-6 text-center">
+        <h1 class="text-3xl md:text-4xl font-bold text-gray-900 mb-3">Let's check in on you.</h1>
+        <p class="text-gray-500 text-lg">
+            Thinking about the <strong class="text-[#005691]">last 2 weeks</strong>, please answer the following questions.
+        </p>
     </div>
 
-    <div class="max-w-3xl mx-auto px-4 mt-8 relative z-20">
-        <form method="POST" class="space-y-6">
+    <div class="max-w-3xl mx-auto px-4">
+        <form method="POST" class="space-y-8">
             {% csrf_token %}
 
-            {% for field in form %}
-            <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-shadow duration-300">
-                <div class="p-6 border-b border-gray-50 bg-gray-50/50">
-                    <h3 class="text-lg md:text-xl font-bold text-gray-800 leading-snug">
-                        {{ field.label }}
-                    </h3>
+            <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+                <div class="bg-blue-50/50 border-b border-blue-100 px-8 py-4 flex items-center gap-3">
+                    <div class="w-8 h-8 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-bold text-sm">1</div>
+                    <h2 class="text-lg font-bold text-[#005691]">Anxiety & Stress</h2>
                 </div>
-
-                <div class="p-4 md:p-6 bg-white">
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-                        {% for radio in field %}
-                        <label class="cursor-pointer relative block group">
-
-                            {{ radio.tag }}
-
-                            <div class="border-2 border-gray-100 rounded-lg p-4 flex items-center gap-3 transition-all duration-200
-                                        hover:border-blue-200 hover:bg-blue-50/50
-                                        peer-checked:border-chiromo-gold peer-checked:bg-[#FFFBEB] peer-checked:shadow-sm
-                                        peer-checked:[&_.dot]:opacity-100 peer-checked:[&_.dot]:scale-100
-                                        peer-checked:[&_.outer-circle]:border-chiromo-gold">
-
-                                <div class="outer-circle w-5 h-5 rounded-full border-2 border-gray-300 flex items-center justify-center flex-shrink-0 transition-colors">
-                                    <div class="dot w-2.5 h-2.5 rounded-full bg-chiromo-gold opacity-0 transform scale-0 transition-all duration-200"></div>
-                                </div>
-
-                                <span class="text-gray-600 font-medium text-sm md:text-base select-none transition-colors
-                                             peer-checked:text-chiromo-navy peer-checked:font-bold">
-                                    {{ radio.choice_label }}
-                                </span>
-                            </div>
-                        </label>
-                        {% endfor %}
-                    </div>
+                <div class="p-8">
+                    {% include 'includes/assessment_question.html' with id="q1" label="Feeling nervous, anxious, or on edge" %}
+                    <hr class="border-gray-100 my-8 border-dashed">
+                    {% include 'includes/assessment_question.html' with id="q2" label="Not being able to stop or control worrying" %}
+                    <hr class="border-gray-100 my-8 border-dashed">
+                    {% include 'includes/assessment_question.html' with id="q3" label="Trouble relaxing" %}
                 </div>
             </div>
-            {% endfor %}
 
-            <div class="pt-8 pb-12 flex flex-col items-center">
-                <button type="submit" class="group relative bg-chiromo-gold text-white text-lg font-bold py-4 px-12 rounded-full shadow-lg hover:bg-yellow-600 hover:shadow-xl transition-all transform hover:-translate-y-1 active:translate-y-0">
-                    <span class="relative z-10 flex items-center gap-2">
-                        View Assessment Results
-                        <svg class="w-5 h-5 transition-transform group-hover:translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"></path></svg>
-                    </span>
-                </button>
-                <p class="text-gray-400 text-xs mt-6 max-w-md text-center">
-                    <svg class="w-3 h-3 inline mr-1" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clip-rule="evenodd"></path></svg>
-                    Your responses are encrypted and confidential.
-                </p>
+            <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+                <div class="bg-purple-50/50 border-b border-purple-100 px-8 py-4 flex items-center gap-3">
+                    <div class="w-8 h-8 rounded-full bg-purple-100 text-purple-600 flex items-center justify-center font-bold text-sm">2</div>
+                    <h2 class="text-lg font-bold text-purple-800">Mood & Emotions</h2>
+                </div>
+                <div class="p-8">
+                    {% include 'includes/assessment_question.html' with id="q4" label="Little interest or pleasure in doing things" %}
+                    <hr class="border-gray-100 my-8 border-dashed">
+                    {% include 'includes/assessment_question.html' with id="q5" label="Feeling down, depressed, or hopeless" %}
+                    <hr class="border-gray-100 my-8 border-dashed">
+                    {% include 'includes/assessment_question.html' with id="q6" label="Feeling tired or having little energy" %}
+                </div>
             </div>
+
+            <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+                <div class="bg-orange-50/50 border-b border-orange-100 px-8 py-4 flex items-center gap-3">
+                    <div class="w-8 h-8 rounded-full bg-orange-100 text-orange-600 flex items-center justify-center font-bold text-sm">3</div>
+                    <h2 class="text-lg font-bold text-orange-800">Habits & Lifestyle</h2>
+                </div>
+                <div class="p-8">
+                    {% include 'includes/assessment_question.html' with id="q7" label="Felt you needed to cut down on your drinking or drug use" %}
+                    <hr class="border-gray-100 my-8 border-dashed">
+                    {% include 'includes/assessment_question.html' with id="q8" label="Have people annoyed you by criticizing your substance use" %}
+                    <hr class="border-gray-100 my-8 border-dashed">
+                    {% include 'includes/assessment_question.html' with id="q9" label="Have you ever felt guilty about your substance use" %}
+                </div>
+            </div>
+
+            <div class="fixed bottom-0 left-0 w-full bg-white border-t border-gray-200 p-4 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)] md:relative md:bg-transparent md:border-0 md:shadow-none md:p-0 md:mt-12 z-40">
+                <div class="max-w-3xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
+                    <p class="text-xs text-gray-400 hidden md:block">
+                        <span class="font-bold">Privacy Check:</span> Your results are encrypted.
+                    </p>
+                    <button type="submit" class="w-full md:w-auto bg-[#005691] text-white text-lg font-bold py-4 px-12 rounded-xl shadow-lg hover:bg-blue-900 transition transform hover:-translate-y-1 flex items-center justify-center gap-2">
+                        View Analysis Result
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                    </button>
+                </div>
+            </div>
+
         </form>
     </div>
 </div>
