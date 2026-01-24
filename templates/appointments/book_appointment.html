@@ -1,62 +1,53 @@
 {% extends 'base.html' %}
-
 {% block title %}Book Session | CMHS{% endblock %}
-
 {% block navbar %}{% endblock %}
-{% block footer %}{% endblock %}
 
 {% block content %}
 <div class="fixed inset-0 flex bg-gray-50 overflow-hidden font-sans">
-
-    <div class="md:hidden fixed top-0 w-full bg-chiromo-navy text-white z-50 flex justify-between items-center px-4 h-16 shadow-md">
-        <span class="font-bold text-lg text-chiromo-gold">Book Session</span>
-        <button onclick="document.getElementById('mobile-menu').classList.toggle('hidden')" class="text-white focus:outline-none p-2">
-            <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
-        </button>
-    </div>
-
-    <div id="mobile-menu" class="hidden md:hidden fixed inset-0 z-40 bg-chiromo-navy bg-opacity-95 pt-20 px-6 transition-all duration-300">
-        <div class="flex flex-col space-y-6">
-            <a href="{% url 'dashboard' %}" class="text-white text-xl font-medium">Dashboard</a>
-            <a href="{% url 'calendar' %}" class="text-white text-xl font-medium">My Schedule</a>
-            <a href="#" class="text-white text-xl font-bold border-b border-chiromo-gold pb-2">Book Session</a>
-            <form action="{% url 'logout' %}" method="post" class="mt-8">
-                {% csrf_token %}
-                <button type="submit" class="text-red-400 font-bold text-xl">Logout</button>
-            </form>
-             <button onclick="document.getElementById('mobile-menu').classList.add('hidden')" class="absolute top-4 right-4 text-white">
-                <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
-            </button>
-        </div>
-    </div>
 
     {% include 'includes/patient_sidebar.html' %}
 
     <main class="flex-1 overflow-y-auto mt-16 md:mt-0 p-4 md:p-8 w-full">
         <div class="max-w-3xl mx-auto">
-            
+
             <div class="mb-8">
-                <a href="{% url 'dashboard' %}" class="text-sm text-gray-500 hover:text-chiromo-navy mb-2 inline-flex items-center gap-1">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
-                    Back to Dashboard
-                </a>
                 <h1 class="text-3xl font-bold text-chiromo-navy">New Appointment</h1>
-                <p class="text-gray-500 mt-1">Schedule a session with your preferred therapist.</p>
             </div>
 
             <div class="bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden">
                 <div class="bg-chiromo-navy px-6 py-4 border-b border-blue-900">
                     <h2 class="text-white font-bold text-lg">Session Details</h2>
                 </div>
-                
+
                 <div class="p-6 md:p-8">
                     <form method="POST" class="space-y-6">
                         {% csrf_token %}
-                        
-                        <div>
-                            <label class="block text-sm font-bold text-chiromo-navy mb-2">Select Therapist</label>
+
+                        <div class="hidden">
                             {{ form.therapist }}
-                            <p class="text-xs text-gray-500 mt-1">Choose a specialist available for your session.</p>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-bold text-chiromo-navy mb-3">Select Therapist</label>
+
+                            <div class="grid grid-cols-1 gap-4">
+                                {% for therapist in therapists %}
+                                <div id="card-{{ therapist.id }}" class="therapist-card border-2 border-gray-100 p-4 rounded-lg hover:shadow-md transition bg-white flex justify-between items-center group">
+                                    <div>
+                                        <h3 class="font-bold text-chiromo-navy">Dr. {{ therapist.last_name }}</h3>
+                                        <span class="inline-block bg-blue-100 text-blue-800 text-xs px-2 py-0.5 rounded-full font-bold mt-1 uppercase">
+                                            {{ therapist.get_specialization_display }}
+                                        </span>
+                                    </div>
+
+                                    <button type="button" onclick="selectTherapist('{{ therapist.id }}')" class="px-4 py-2 bg-gray-100 text-chiromo-navy text-xs font-bold rounded hover:bg-chiromo-gold hover:text-white transition">
+                                        Select
+                                    </button>
+                                </div>
+                                {% empty %}
+                                <p class="text-red-500">No therapists available at the moment.</p>
+                                {% endfor %}
+                            </div>
                         </div>
 
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -76,22 +67,50 @@
                         </div>
 
                         <div>
-                            <label class="block text-sm font-bold text-chiromo-navy mb-2">Notes (Optional)</label>
+                            <label class="block text-sm font-bold text-chiromo-navy mb-2">Notes</label>
                             {{ form.notes }}
-                            <p class="text-xs text-gray-500 mt-1">Briefly describe what you'd like to discuss.</p>
                         </div>
 
                         <div class="pt-4 border-t border-gray-100 flex justify-end">
-                            <button type="submit" class="bg-chiromo-gold hover:bg-yellow-600 text-white font-bold py-3 px-8 rounded-lg shadow-md transition transform hover:-translate-y-0.5">
+                            <button type="submit" class="bg-chiromo-gold hover:bg-yellow-600 text-white font-bold py-3 px-8 rounded-lg shadow-md transition">
                                 Confirm Booking
                             </button>
                         </div>
-
                     </form>
                 </div>
             </div>
-
         </div>
     </main>
 </div>
+
+<script>
+    function selectTherapist(therapistId) {
+        // 1. Update the hidden dropdown value
+        const select = document.querySelector('select[name="therapist"]');
+        select.value = therapistId;
+
+        // 2. Visual Feedback: Reset all cards to gray
+        document.querySelectorAll('.therapist-card').forEach(card => {
+            card.classList.remove('border-chiromo-gold', 'bg-yellow-50');
+            card.classList.add('border-gray-100', 'bg-white');
+
+            // Reset button text
+            const btn = card.querySelector('button');
+            btn.innerText = "Select";
+            btn.classList.remove('bg-chiromo-navy', 'text-white');
+            btn.classList.add('bg-gray-100', 'text-chiromo-navy');
+        });
+
+        // 3. Highlight the selected card
+        const selectedCard = document.getElementById('card-' + therapistId);
+        selectedCard.classList.remove('border-gray-100', 'bg-white');
+        selectedCard.classList.add('border-chiromo-gold', 'bg-yellow-50');
+
+        // Change button to "Selected"
+        const selectedBtn = selectedCard.querySelector('button');
+        selectedBtn.innerText = "Selected ✓";
+        selectedBtn.classList.remove('bg-gray-100', 'text-chiromo-navy');
+        selectedBtn.classList.add('bg-chiromo-navy', 'text-white');
+    }
+</script>
 {% endblock %}
