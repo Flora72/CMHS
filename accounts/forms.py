@@ -28,3 +28,16 @@ class ProfileUpdateForm(forms.ModelForm):
             'last_name': forms.TextInput(attrs={'class': 'w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-chiromo-navy'}),
             'email': forms.EmailInput(attrs={'class': 'w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-chiromo-navy'}),
         }
+
+
+class TherapistRegistrationForm(UserCreationForm):
+    class Meta:
+        model = User
+        fields = ['first_name', 'last_name', 'username', 'email', 'specialization']  # Added specialization
+
+    # Optional: Style the dropdown
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['specialization'].widget.attrs.update({
+            'class': 'w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-chiromo-gold'
+        })
