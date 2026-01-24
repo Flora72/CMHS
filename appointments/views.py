@@ -5,9 +5,14 @@ from datetime import datetime
 from django.utils import timezone
 from django.contrib import messages
 from django.db.models import Q
-from .forms import BookingForm, SessionLogForm, DepressionAssessmentForm, AnxietyAssessmentForm, BipolarAssessmentForm
-from .models import Appointment, SessionLog, MoodEntry, Message, User, AssessmentResult
+from .forms import BookingForm, SessionLogForm
+from .models import Appointment, SessionLog, MoodEntry, Message
 from django.core.mail import send_mail
+from accounts.models import User
+from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
+import json
+
 
 
 @login_required
@@ -67,34 +72,33 @@ def book_appointment(request):
             appointment.patient = request.user
             appointment.save()
 
-            # --- SEND EMAIL CODE ---
+            # email notification
             subject = 'Appointment Confirmed - Chiromo Hospital'
             message = f"""
             Dear {request.user.first_name},
-
             Your appointment has been successfully booked.
-
             Therapist: {appointment.therapist.username}
             Date: {appointment.date}
             Time: {appointment.time}
             Link: {appointment.meeting_link or 'Pending'}
-
             Thank you for choosing Chiromo.
             """
             from_email = 'noreply@chiromo.com'
             recipient_list = [request.user.email]
-
             send_mail(subject, message, from_email, recipient_list, fail_silently=True)
 
             messages.success(request, 'Your session has been booked successfully! Check your email.')
             return redirect('dashboard')
-
-    # --- THIS ELSE BLOCK WAS MISSING ---
     else:
         form = BookingForm()
-    # -----------------------------------
 
-    return render(request, 'appointments/book_appointment.html', {'form': form})
+    therapists = User.objects.filter(role='therapist')
+    context = {
+        'form': form,
+        'therapists': therapists
+    }
+
+    return render(request, 'appointments/book_appointment.html', context)
 
 @login_required
 def log_session(request, appointment_id):
@@ -166,38 +170,13 @@ def log_mood(request, mood_value):
 
 @login_required
 def inbox(request, id=None):
-    # 1. DETERMINE THE CHAT PARTNER
+    # 1. DETERMINE ACTIVE CHAT PARTNER
     chat_partner = None
-
     if id:
-        # If an ID is passed (e.g., Doctor clicked "Message" on a patient)
         chat_partner = get_object_or_404(User, id=id)
 
-    else:
-        # If no ID, try to find the most recent conversation
-        last_msg = Message.objects.filter(
-            Q(sender=request.user) | Q(recipient=request.user)
-        ).order_by('-timestamp').last()
-
-        if last_msg:
-            chat_partner = last_msg.recipient if last_msg.sender == request.user else last_msg.sender
-
-    # If still no partner (New account), handle gracefully
-    if not chat_partner:
-        if request.user.role == 'patient':
-            # Fallback for patient: Find their therapist
-            last_appt = Appointment.objects.filter(patient=request.user).first()
-            if last_appt:
-                chat_partner = last_appt.therapist
-            else:
-                messages.warning(request, "Book an appointment to start chatting!")
-                return redirect('dashboard')
-        else:
-            messages.info(request, "Select a patient to start messaging.")
-            return redirect('therapist_patients')
-
-    # 2. HANDLE SENDING MESSAGES
-    if request.method == 'POST':
+    # 2. SEND MESSAGE
+    if request.method == 'POST' and chat_partner:
         body = request.POST.get('body')
         if body:
             Message.objects.create(
@@ -205,49 +184,105 @@ def inbox(request, id=None):
                 recipient=chat_partner,
                 body=body
             )
-            return redirect('inbox_with_id', id=chat_partner.id)  # Reload with specific ID
+            return redirect('inbox_with_id', id=chat_partner.id)
 
-    # 3. GET CHAT HISTORY
-    messages_list = Message.objects.filter(
-        Q(sender=request.user, recipient=chat_partner) |
-        Q(sender=chat_partner, recipient=request.user)
-    ).order_by('timestamp')
+    # 3. GET MESSAGES FOR ACTIVE CHAT
+    messages_list = []
+    if chat_partner:
+        messages_list = Message.objects.filter(
+            Q(sender=request.user, recipient=chat_partner) |
+            Q(sender=chat_partner, recipient=request.user)
+        ).order_by('timestamp')
+        Message.objects.filter(recipient=request.user, sender=chat_partner, is_read=False).update(is_read=True)
 
-    # Mark as read
-    Message.objects.filter(recipient=request.user, sender=chat_partner, is_read=False).update(is_read=True)
+    # --- NEW PART: FETCH RECENT CONTACTS FOR SIDEBAR ---
+    # Get all unique users involved in messages with me
+    sent_messages = Message.objects.filter(sender=request.user).values_list('recipient', flat=True)
+    received_messages = Message.objects.filter(recipient=request.user).values_list('sender', flat=True)
+
+    # Combine IDs and remove duplicates
+    contact_ids = set(list(sent_messages) + list(received_messages))
+
+    # Fetch User objects (exclude self just in case)
+    recent_contacts = User.objects.filter(id__in=contact_ids).exclude(id=request.user.id)
 
     return render(request, 'appointments/inbox.html', {
         'messages_list': messages_list,
-        'chat_partner': chat_partner
+        'chat_partner': chat_partner,
+        'recent_contacts': recent_contacts,  # <--- Pass this to template
     })
+
+
+# appointments/views.py
+
+@login_required
+def get_chat_messages(request, partner_id):
+    partner = get_object_or_404(User, id=partner_id)
+
+    # Fetch and sort
+    messages = Message.objects.filter(
+        Q(sender=request.user, recipient=partner) |
+        Q(sender=partner, recipient=request.user)
+    ).order_by('timestamp')
+
+    # Mark as read
+    Message.objects.filter(sender=partner, recipient=request.user, is_read=False).update(is_read=True)
+
+    data = []
+    for msg in messages:
+        # LOGIC: If I sent it, and it's not already deleted, I can edit/delete it.
+        # No time limits anymore.
+        is_owner = (msg.sender == request.user)
+        is_deleted = (msg.body == "🚫 This message was deleted")
+
+        data.append({
+            'id': msg.id,
+            'sender': 'me' if is_owner else 'partner',
+            'body': msg.body,
+            'timestamp': timezone.localtime(msg.timestamp).strftime("%H:%M"),
+            'can_edit': is_owner and not is_deleted,  # Always True for owner
+            'can_delete': is_owner and not is_deleted,  # Always True for owner
+            'is_deleted': is_deleted
+        })
+
+    return JsonResponse({'messages': data})
 
 
 @login_required
 def delete_message(request, msg_id):
-    # Only allow deletion if the logged-in user is the sender
+    # Verify ownership ONLY
     message = get_object_or_404(Message, id=msg_id, sender=request.user)
 
-    # Store the partner's ID to redirect back to the chat
-    partner_id = message.recipient.id
-    message.delete()
+    # Soft Delete
+    message.body = "🚫 This message was deleted"
+    message.save()
 
-    messages.success(request, "Message unsent.")
-    return redirect('inbox_with_id', id=partner_id)
-
-
-@login_required
-def edit_message(request, msg_id):
-    message = get_object_or_404(Message, id=msg_id, sender=request.user)
-
-    if request.method == 'POST':
-        new_body = request.POST.get('body')
-        if new_body:
-            message.body = new_body
-            message.save()
-            messages.success(request, "Message edited.")
+    if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+        return JsonResponse({'status': 'success'})
 
     return redirect('inbox_with_id', id=message.recipient.id)
 
+
+@login_required
+@csrf_exempt
+def edit_message(request, msg_id):
+    # Verify ownership ONLY
+    message = get_object_or_404(Message, id=msg_id, sender=request.user)
+
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            new_body = data.get('body')
+        except:
+            new_body = request.POST.get('body')
+
+        if new_body:
+            message.body = new_body
+            message.save()
+            if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+                return JsonResponse({'status': 'success'})
+
+    return redirect('inbox_with_id', id=message.recipient.id)
 @login_required
 def cancel_appointment(request, id):
 
@@ -265,67 +300,84 @@ def cancel_appointment(request, id):
 def assessment_hub(request):
     return render(request, 'appointments/assessment_hub.html')
 
-def take_assessment(request, test_type):
-    if test_type == 'anxiety':
-        FormClass = AnxietyAssessmentForm
-        title = "Anxiety Screening (GAD-7)"
-    elif test_type == 'bipolar':
-        FormClass = BipolarAssessmentForm
-        title = "Bipolar Disorder Screening"
-    else:
-        FormClass = DepressionAssessmentForm
-        title = "Depression Screening (PHQ-9)"
-
+def take_assessment(request):
     if request.method == 'POST':
-        form = FormClass(request.POST)
-        if form.is_valid():
-            total_score = 0
-            for field in form.cleaned_data:
-                total_score += int(form.cleaned_data[field])
+        # assessment scores categorization
 
-            # Simple logic for Demo purposes (Real medical logic is complex)
-            if total_score <= 4: severity = 'minimal'
-            elif total_score <= 9: severity = 'mild'
-            elif total_score <= 14: severity = 'moderate'
-            else: severity = 'severe'
+        # Anxiety Questions (Q1-Q3)
+        a1 = int(request.POST.get('q1', 0))
+        a2 = int(request.POST.get('q2', 0))
+        a3 = int(request.POST.get('q3', 0))
+        anxiety_total = a1 + a2 + a3
 
-            if request.user.is_authenticated:
-                AssessmentResult.objects.create(
-                    patient=request.user,
-                    test_type=test_type, # Save which test it was
-                    score=total_score,
-                    severity=severity
-                )
-                return redirect('dashboard')
-            else:
-                # Guest Logic
-                request.session['guest_score'] = total_score
-                request.session['guest_severity'] = severity
-                request.session['guest_test_type'] = title
-                return redirect('public_result')
+        # Depression Questions (Q4-Q6)
+        d1 = int(request.POST.get('q4', 0))
+        d2 = int(request.POST.get('q5', 0))
+        d3 = int(request.POST.get('q6', 0))
+        depression_total = d1 + d2 + d3
 
-    else:
-        form = FormClass()
+        # Addiction Questions (Q7-Q9)
+        s1 = int(request.POST.get('q7', 0))
+        s2 = int(request.POST.get('q8', 0))
+        s3 = int(request.POST.get('q9', 0))
+        substance_total = s1 + s2 + s3
 
-    return render(request, 'appointments/take_assessment.html', {
-        'form': form,
-        'title': title
-    })
+        result_title = "General Mental Wellness"
+        result_desc = "Your responses suggest you are coping well, but regular check-ins are healthy."
+        recommended_specialty = 'general'
 
-def public_result(request):
-    score = request.session.get('guest_score')
-    severity = request.session.get('guest_severity')
+        # High Substance Risk (Priority)
+        if substance_total >= 5:
+            result_title = "Risk of Substance Use Disorder"
+            result_desc = "Your responses indicate signs of dependency or substance misuse. Professional support is highly recommended to manage this safely."
+            recommended_specialty = 'addiction'
 
-    if score is None:
-        return redirect('assessment_hub')
+        # High Depression Risk
+        elif depression_total >= 6:
+            result_title = "Signs of Moderate to Severe Depression"
+            result_desc = "You reported frequent low mood and loss of interest. A Clinical Psychologist can help you develop coping strategies."
+            recommended_specialty = 'clinical'
 
-    # CLEAN THE TEXT HERE:
-    if severity:
-        severity_display = severity.replace('_', ' ') # Replaces underscore with space
-    else:
-        severity_display = "Unknown"
+        # High Anxiety Risk
+        elif anxiety_total >= 6:
+            result_title = "High Anxiety & Stress Levels"
+            result_desc = "You seem to be experiencing significant worry or inability to relax. A therapist can help with stress management techniques."
+            recommended_specialty = 'general'
 
-    return render(request, 'appointments/public_result.html', {
-        'score': score,
-        'severity': severity_display, # Pass the clean version
-    })
+        # Moderate Mix
+        elif anxiety_total >= 4 or depression_total >= 4:
+            result_title = "Mild Emotional Distress"
+            result_desc = "You are experiencing some symptoms of stress or low mood. Early intervention with a counselor can prevent this from worsening."
+            recommended_specialty = 'general'
+
+        # --- 3. SEND TO RESULT PAGE ---
+        context = {
+            'result_title': result_title,
+            'result_desc': result_desc,
+            'specialty': recommended_specialty,
+            'score_a': anxiety_total,  # Optional: Show them their breakdown
+            'score_d': depression_total,
+            'score_s': substance_total,
+        }
+        return render(request, 'appointments/public_result.html', context)
+
+    return render(request, 'appointments/take_assessment.html')
+
+@login_required
+@csrf_exempt
+def send_chat_message(request):
+    if request.method == 'POST':
+        data = json.loads(request.body)
+        recipient_id = data.get('recipient_id')
+        body = data.get('body')
+
+        recipient = get_object_or_404(User, id=recipient_id)
+
+        Message.objects.create(
+            sender=request.user,
+            recipient=recipient,
+            body=body
+        )
+        return JsonResponse({'status': 'success'})
+
+    return JsonResponse({'status': 'error'}, status=400)
