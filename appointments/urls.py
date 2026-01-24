@@ -14,7 +14,7 @@ urlpatterns = [
     path('message/edit/<int:msg_id>/', views.edit_message, name='edit_message'),
     path('cancel/<int:id>/', views.cancel_appointment, name='cancel_appointment'),
     path('assessment/', views.assessment_hub, name='assessment_hub'),
-    path('assessment/<str:test_type>/', views.take_assessment, name='take_assessment_by_type'),
-    path('assessment/result/', views.public_result, name='public_result'),
-    path('assessment/result/public/', views.public_result, name='public_result'),
+    path('take_assessment/', views.take_assessment, name='take_assessment'),
+    path('api/get-messages/<int:partner_id>/', views.get_chat_messages, name='get_chat_messages'),
+    path('api/send-message/', views.send_chat_message, name='send_chat_message'),
 ]
