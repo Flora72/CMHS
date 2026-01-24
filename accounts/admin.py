@@ -4,14 +4,15 @@ from .models import User
 
 class CustomUserAdmin(UserAdmin):
     model = User
-    list_display = ['username', 'email', 'role', 'is_staff']
+    list_display = ['username', 'email', 'specialization','role', 'is_staff']
+    list_filter = ['role', 'specialization', 'is_staff']
 
     fieldsets = UserAdmin.fieldsets + (
-        ('Custom Fields', {'fields': ('role', 'phone_number')}),
+        ('Chiromo Profile', {'fields': ('role', 'specialization', 'phone_number')}),
     )
 
     add_fieldsets = UserAdmin.add_fieldsets + (
-        ('Custom Fields', {'fields': ('role', 'phone_number')}),
+        ('Chiromo Profile', {'fields': ('role', 'specialization', 'phone_number', 'email')}),
     )
 
 
