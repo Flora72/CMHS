@@ -1,120 +1,292 @@
 {% extends 'base.html' %}
 {% block title %}Messages | CMHS{% endblock %}
-{% block navbar %}{% endblock %}{% block footer %}{% endblock %}
+
+{% block navbar %}{% endblock %}
+{% block footer %}{% endblock %}
 
 {% block content %}
-<div class="fixed inset-0 flex bg-gray-50 overflow-hidden font-sans">
-    
-    {% if user.role == 'therapist' %}
-        {% include 'includes/therapist_sidebar.html' %}
-    {% else %}
-        {% include 'includes/patient_sidebar.html' %}
-    {% endif %}
+<div class="fixed inset-0 flex bg-white overflow-hidden font-sans">
 
-    <main class="flex-1 bg-gray-50 p-4 md:p-8 w-full flex flex-col mt-16 md:mt-0 overflow-hidden">
+    <div class="hidden md:flex flex-shrink-0 z-30 shadow-xl">
+        {% if user.role == 'therapist' %}
+            {% include 'includes/therapist_sidebar.html' %}
+        {% else %}
+            {% include 'includes/patient_sidebar.html' %}
+        {% endif %}
+    </div>
 
-        <div class="max-w-4xl mx-auto w-full h-full flex flex-col">
+    <div class="flex-1 w-full h-full flex flex-col md:flex-row overflow-hidden relative">
 
-            <div class="mb-4 flex justify-between items-center shrink-0">
-                <div>
-                    <h1 class="text-2xl font-bold text-chiromo-navy">Messages</h1>
-                    <p class="text-sm text-gray-500">
-                        Chatting with
-                        <span class="font-bold text-chiromo-navy">
-                            {% if chat_partner.role == 'therapist' %}
-                                Dr. {{ chat_partner.last_name|default:chat_partner.username }}
-                            {% else %}
-                                {{ chat_partner.first_name|default:chat_partner.username }}
-                                {{ chat_partner.last_name }}
-                            {% endif %}
-                        </span>
-                    </p>
+        <div class="w-full md:w-80 bg-white border-r border-gray-200 flex-col h-full z-20 {% if chat_partner %}hidden md:flex{% else %}flex{% endif %}">
+            <div class="p-4 border-b border-gray-100 bg-white flex justify-between items-center flex-shrink-0 h-16">
+                 <div class="flex items-center gap-2">
+                     <a href="{% url 'dashboard' %}" class="md:hidden text-gray-500 mr-2 p-1 hover:bg-gray-100 rounded-full transition">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
+                     </a>
+                    <h2 class="text-xl font-bold text-chiromo-navy">Messages</h2>
                 </div>
             </div>
 
-            <div class="flex-1 bg-white rounded-xl shadow-sm border border-gray-200 flex flex-col overflow-hidden h-[calc(100vh-12rem)]">
-
-                <div class="flex-1 overflow-y-auto p-6 space-y-6 bg-gray-50/50">
-                    {% for msg in messages_list %}
-                        {% if msg.sender == request.user %}
-                            <div class="flex justify-end group">
-                                <div class="max-w-sm">
-
-                                    <div id="msg-display-{{ msg.id }}">
-                                        <div class="bg-chiromo-navy text-white px-4 py-2 rounded-t-xl rounded-bl-xl shadow-sm break-words relative">
-                                            <p class="text-sm">{{ msg.body }}</p>
-                                            <div class="flex items-center justify-end gap-2 mt-1">
-                                                <p class="text-[10px] text-blue-200">{{ msg.timestamp|date:"H:i" }}</p>
-                                                <div class="opacity-0 group-hover:opacity-100 transition-opacity flex gap-2">
-                                                    <button onclick="toggleEdit('{{ msg.id }}')" class="text-blue-200 hover:text-white" title="Edit">
-                                                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
-                                                    </button>
-                                                    <a href="{% url 'delete_message' msg.id %}" class="text-blue-200 hover:text-red-300" title="Unsend" onclick="return confirm('Unsend this message?')">
-                                                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
-                                                    </a>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <div id="msg-edit-{{ msg.id }}" class="hidden">
-                                        <form action="{% url 'edit_message' msg.id %}" method="POST" class="flex flex-col gap-2 bg-white border border-gray-200 p-2 rounded-xl shadow-lg">
-                                            {% csrf_token %}
-                                            <textarea name="body" class="w-full text-sm p-2 border rounded bg-gray-50 focus:outline-none focus:ring-1 focus:ring-chiromo-navy text-gray-800" rows="2">{{ msg.body }}</textarea>
-                                            <div class="flex justify-end gap-2">
-                                                <button type="button" onclick="toggleEdit('{{ msg.id }}')" class="text-xs text-gray-500 hover:text-gray-700">Cancel</button>
-                                                <button type="submit" class="text-xs bg-chiromo-navy text-white px-3 py-1 rounded hover:bg-blue-900">Save</button>
-                                            </div>
-                                        </form>
-                                    </div>
-
-                                </div>
-                            </div>
-                        {% else %}
-                            <div class="flex justify-start">
-                                <div class="bg-white border border-gray-200 text-gray-800 px-4 py-2 rounded-t-xl rounded-br-xl max-w-sm shadow-sm break-words">
-                                    <p class="text-sm">{{ msg.body }}</p>
-                                    <p class="text-[10px] text-gray-400 mt-1">{{ msg.timestamp|date:"H:i" }}</p>
-                                </div>
-                            </div>
-                        {% endif %}
-                    {% empty %}
-                        <div class="text-center py-10 text-gray-400 flex flex-col items-center justify-center h-full">
-                            <div class="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-3 text-2xl">👋</div>
-                            <p>No messages yet.</p>
-                            <p class="text-sm">Say hello to start the conversation!</p>
+            <div class="overflow-y-auto flex-1 p-2 space-y-1 bg-gray-50/30">
+                {% for contact in recent_contacts %}
+                <a href="{% url 'inbox_with_id' contact.id %}" class="block p-3 rounded-xl transition-all border {% if chat_partner and chat_partner.id == contact.id %}bg-blue-50 border-blue-200 shadow-sm border-l-4 border-l-chiromo-navy{% else %}bg-white border-transparent hover:bg-gray-50 hover:border-gray-100{% endif %}">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm shadow-sm {% if chat_partner and chat_partner.id == contact.id %}bg-chiromo-navy text-white{% else %}bg-gray-200 text-gray-500{% endif %}">
+                            {{ contact.username|slice:":1"|upper }}
                         </div>
-                    {% endfor %}
+                        <div class="flex-1 min-w-0">
+                            <p class="font-bold text-sm truncate {% if chat_partner and chat_partner.id == contact.id %}text-chiromo-navy{% else %}text-gray-900{% endif %}">{{ contact.username }}</p>
+                            <p class="text-xs text-gray-400 truncate">Click to chat</p>
+                        </div>
+                    </div>
+                </a>
+                {% empty %}
+                <div class="flex flex-col items-center justify-center h-64 text-gray-400">
+                    <p class="text-sm">No recent conversations.</p>
                 </div>
-
-                <div class="p-4 bg-white border-t border-gray-100 shrink-0">
-                    <form method="POST" class="flex gap-3">
-                        {% csrf_token %}
-                        <input type="text" name="body" required placeholder="Type your message here..."
-                               class="flex-1 border border-gray-200 bg-gray-50 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-chiromo-navy focus:bg-white transition text-sm">
-                        <button type="submit" class="bg-chiromo-gold text-white font-bold px-6 py-2 rounded-lg hover:bg-yellow-600 transition shadow-sm">
-                            Send
-                        </button>
-                    </form>
-                </div>
-
+                {% endfor %}
             </div>
         </div>
-    </main>
+
+        <div class="flex-1 flex-col h-full relative bg-[#F4F7F9] {% if chat_partner %}flex{% else %}hidden md:flex{% endif %}">
+
+            <div class="absolute inset-0 opacity-[0.05] pointer-events-none" style="background-image: radial-gradient(#002147 1px, transparent 1px); background-size: 24px 24px;"></div>
+
+            {% if chat_partner %}
+            <div class="px-4 py-3 bg-white/95 backdrop-blur-md border-b border-gray-200 flex items-center gap-3 shadow-sm z-10 flex-shrink-0 h-16">
+                <a href="{% url 'inbox' %}" class="md:hidden text-gray-500 pr-3 border-r border-gray-200 mr-1 hover:text-chiromo-navy transition">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7 7-7"></path></svg>
+                </a>
+                <div class="w-9 h-9 rounded-full bg-chiromo-navy text-white flex items-center justify-center font-bold text-sm shadow-sm">
+                    {{ chat_partner.username|slice:":1"|upper }}
+                </div>
+                <div>
+                    <h3 class="font-bold text-chiromo-navy text-sm leading-none">{{ chat_partner.username }}</h3>
+                    <p class="text-[10px] text-gray-500 mt-1">Chiromo Hospital Secure Chat</p>
+                </div>
+            </div>
+
+            <div id="chat-container" class="flex-1 overflow-y-auto p-4 space-y-4 relative pb-20 z-0">
+                <div class="flex justify-center mt-6 mb-8">
+                    <div class="bg-gray-100 px-4 py-1.5 rounded-full border border-gray-200 flex items-center gap-2">
+                        <svg class="w-3 h-3 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
+                        <span class="text-[10px] font-bold text-gray-500 uppercase tracking-wide">End-to-end Encrypted</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="p-4 bg-white border-t border-gray-200 flex-shrink-0 z-20">
+                <form id="chat-form" class="flex gap-3 max-w-4xl mx-auto items-center">
+                    <div class="flex-1 relative">
+                        <input type="text" id="message-input" class="w-full rounded-xl border-gray-200 bg-gray-50 px-5 py-3.5 focus:ring-2 focus:ring-blue-100 focus:border-chiromo-navy focus:bg-white transition-all shadow-sm text-sm" placeholder="Type your message here..." autocomplete="off">
+                    </div>
+                    <button type="submit" class="bg-chiromo-navy hover:bg-blue-900 text-white rounded-xl w-12 h-12 flex items-center justify-center shadow-lg hover:shadow-xl transition-all transform active:scale-95 flex-shrink-0">
+                        <svg class="w-5 h-5 ml-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path></svg>
+                    </button>
+                </form>
+            </div>
+
+            {% else %}
+            <div class="flex-1 flex items-center justify-center z-10">
+                <div class="text-center opacity-40">
+                    <p class="text-sm">Select a chat to begin.</p>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
 </div>
 
-<script>
-function toggleEdit(id) {
-    const displayDiv = document.getElementById('msg-display-' + id);
-    const editDiv = document.getElementById('msg-edit-' + id);
+<div id="editModal" class="fixed inset-0 z-50 hidden flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md p-6 transform transition-all scale-100 animate-fade-in-up">
+        <h3 class="text-lg font-bold text-gray-800 mb-4">Edit Message</h3>
+        <textarea id="editInput" rows="3" class="w-full border-gray-300 rounded-lg focus:ring-chiromo-navy focus:border-chiromo-navy p-3 text-gray-700 bg-gray-50"></textarea>
+        <div class="flex justify-end gap-3 mt-4">
+            <button onclick="closeModals()" class="px-4 py-2 text-gray-500 hover:bg-gray-100 rounded-lg font-medium transition">Cancel</button>
+            <button onclick="confirmEdit()" class="px-6 py-2 bg-chiromo-navy text-white rounded-lg hover:bg-blue-900 font-bold shadow-lg transition">Save Changes</button>
+        </div>
+    </div>
+</div>
 
-    if (displayDiv.classList.contains('hidden')) {
-        displayDiv.classList.remove('hidden');
-        editDiv.classList.add('hidden');
-    } else {
-        displayDiv.classList.add('hidden');
-        editDiv.classList.remove('hidden');
+<div id="deleteModal" class="fixed inset-0 z-50 hidden flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-sm p-6 text-center animate-fade-in-up">
+        <div class="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <svg class="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+        </div>
+        <h3 class="text-lg font-bold text-gray-800 mb-2">Delete Message?</h3>
+        <p class="text-sm text-gray-500 mb-6">This will remove the text for everyone.</p>
+        <div class="flex justify-center gap-3">
+            <button onclick="closeModals()" class="px-4 py-2 text-gray-500 hover:bg-gray-100 rounded-lg font-medium transition">Cancel</button>
+            <button onclick="confirmDelete()" class="px-6 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 font-bold shadow-lg transition">Delete</button>
+        </div>
+    </div>
+</div>
+{% if chat_partner %}
+<script>
+    const chatContainer = document.getElementById('chat-container');
+    const chatForm = document.getElementById('chat-form');
+    const messageInput = document.getElementById('message-input');
+    const partnerId = "{{ chat_partner.id }}";
+
+    let activeMsgId = null;
+    let lastMessageCount = 0;
+    let lastMessagesData = "";
+
+    // CLOSE MENUS WHEN CLICKING OUTSIDE
+    document.addEventListener('click', function(e) {
+        if (!e.target.closest('.message-menu-btn') && !e.target.closest('.message-dropdown')) {
+            document.querySelectorAll('.message-dropdown').forEach(el => el.classList.add('hidden'));
+        }
+    });
+
+    function fetchMessages() {
+        fetch(`/appointments/api/get-messages/${partnerId}/`)
+            .then(response => response.json())
+            .then(data => {
+                const currentDataString = JSON.stringify(data.messages);
+                if (currentDataString !== lastMessagesData) {
+                    renderMessages(data.messages);
+                    lastMessagesData = currentDataString;
+                    if (data.messages.length > lastMessageCount) {
+                        scrollToBottom();
+                        lastMessageCount = data.messages.length;
+                    }
+                }
+            })
+            .catch(err => console.log(err));
     }
-}
+
+    function renderMessages(messages) {
+        const headerHTML = `<div class="flex justify-center mt-6 mb-8"><div class="bg-gray-100 px-4 py-1.5 rounded-full border border-gray-200 flex items-center gap-2"><svg class="w-3 h-3 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg><span class="text-[10px] font-bold text-gray-500 uppercase tracking-wide">End-to-end Encrypted</span></div></div>`;
+
+        let msgsHTML = '';
+        messages.forEach(msg => {
+            const isMe = msg.sender === 'me';
+            let bubbleClass, textClass, content, timeClass;
+
+            if (msg.is_deleted) {
+                // --- NEW "PLEASANT" DELETED STYLE ---
+                // Light grey background, grey border, no shadow
+                bubbleClass = 'bg-gray-50 border border-gray-100 text-gray-400 rounded-xl px-3 py-2';
+
+                // Small, italic text
+                textClass = 'text-xs italic flex items-center gap-2';
+
+                // Use a soft Trash icon instead of the Red Stop sign
+                content = `
+                    <svg class="w-3 h-3 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                    <span>This message was deleted</span>
+                `;
+                timeClass = 'hidden'; // Hide time for deleted messages to keep it minimal
+            } else {
+                // --- NORMAL MESSAGE STYLE ---
+                bubbleClass = isMe
+                    ? 'bg-chiromo-navy text-white rounded-br-none shadow-md group px-5 py-3'
+                    : 'bg-white text-gray-800 rounded-bl-none shadow-sm border border-gray-100 px-5 py-3';
+
+                textClass = 'font-medium text-sm break-words';
+                content = msg.body;
+                timeClass = isMe ? 'text-blue-200' : 'text-gray-400';
+            }
+
+            // --- MENU BUTTON (Only for non-deleted, own messages) ---
+            let menuHTML = '';
+            if (isMe && !msg.is_deleted && (msg.can_edit || msg.can_delete)) {
+                menuHTML = `
+                <div class="absolute -top-2 -left-2 z-20">
+                    <div class="relative">
+                        <button onclick="toggleMenu(event, 'menu-${msg.id}')" class="message-menu-btn bg-white text-gray-400 p-1 rounded-full shadow-sm border border-gray-200 hover:text-chiromo-navy hover:shadow-md transition-all opacity-0 group-hover:opacity-100">
+                            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z"></path></svg>
+                        </button>
+                        <div id="menu-${msg.id}" class="message-dropdown absolute left-0 bottom-full mb-1 hidden bg-white rounded-lg shadow-xl border border-gray-100 w-32 overflow-hidden z-30">
+                            ${msg.can_edit ? `<button onclick="openEditModal(${msg.id}, '${msg.body.replace(/'/g, "\\'")}')" class="block w-full text-left px-4 py-2.5 text-xs hover:bg-gray-50 text-gray-700 border-b border-gray-50 font-medium">Edit Message</button>` : ''}
+                            ${msg.can_delete ? `<button onclick="openDeleteModal(${msg.id})" class="block w-full text-left px-4 py-2.5 text-xs hover:bg-red-50 text-red-600 font-medium">Delete</button>` : ''}
+                        </div>
+                    </div>
+                </div>`;
+            }
+
+            msgsHTML += `
+                <div class="flex ${isMe ? 'justify-end' : 'justify-start'} mb-4 animate-fade-in-up px-2 relative group">
+                    <div class="max-w-[85%] md:max-w-[70%] rounded-2xl relative leading-relaxed ${bubbleClass}">
+                        ${menuHTML}
+                        <div class="${textClass}">${content}</div>
+                        <span class="text-[10px] block text-right mt-1.5 tracking-wide opacity-80 ${timeClass ? timeClass : 'hidden'}">${msg.timestamp}</span>
+                    </div>
+                </div>`;
+        });
+        chatContainer.innerHTML = headerHTML + msgsHTML;
+    }
+
+    function scrollToBottom() { chatContainer.scrollTop = chatContainer.scrollHeight; }
+
+    // --- MENU & MODALS (No changes needed here, just keep them working) ---
+    window.toggleMenu = function(e, menuId) {
+        e.stopPropagation();
+        document.querySelectorAll('.message-dropdown').forEach(el => {
+            if(el.id !== menuId) el.classList.add('hidden');
+        });
+        document.getElementById(menuId).classList.toggle('hidden');
+    };
+
+    function closeModals() {
+        document.getElementById('editModal').classList.add('hidden');
+        document.getElementById('deleteModal').classList.add('hidden');
+        activeMsgId = null;
+    }
+
+    window.openEditModal = function(id, body) {
+        document.querySelectorAll('.message-dropdown').forEach(el => el.classList.add('hidden'));
+        activeMsgId = id;
+        document.getElementById('editInput').value = body;
+        document.getElementById('editModal').classList.remove('hidden');
+        document.getElementById('editInput').focus();
+    }
+
+    window.confirmEdit = function() {
+        const newBody = document.getElementById('editInput').value;
+        if (!newBody.trim()) return;
+
+        fetch(`/appointments/message/edit/${activeMsgId}/`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-CSRFToken': '{{ csrf_token }}', 'X-Requested-With': 'XMLHttpRequest' },
+            body: JSON.stringify({ body: newBody })
+        }).then(res => {
+            if(res.ok) { fetchMessages(); closeModals(); }
+            else { alert("Unable to edit."); closeModals(); }
+        });
+    }
+
+    window.openDeleteModal = function(id) {
+        document.querySelectorAll('.message-dropdown').forEach(el => el.classList.add('hidden'));
+        activeMsgId = id;
+        document.getElementById('deleteModal').classList.remove('hidden');
+    }
+
+    window.confirmDelete = function() {
+        fetch(`/appointments/message/delete/${activeMsgId}/`, {
+            headers: {'X-Requested-With': 'XMLHttpRequest'}
+        }).then(res => {
+            if(res.ok) { fetchMessages(); closeModals(); }
+            else { alert("Unable to delete."); closeModals(); }
+        });
+    }
+
+    chatForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        const body = messageInput.value.trim();
+        if (!body) return;
+        messageInput.value = '';
+        fetch('/appointments/api/send-message/', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json', 'X-CSRFToken': '{{ csrf_token }}'},
+            body: JSON.stringify({ recipient_id: partnerId, body: body })
+        }).then(res => { if(res.ok) fetchMessages(); });
+    });
+
+    fetchMessages();
+    setInterval(fetchMessages, 2000);
 </script>
+
+{% endif %}
 {% endblock %}
