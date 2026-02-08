@@ -8,6 +8,7 @@ urlpatterns = [
     path('', include('cmhsApp.urls')),
     path('', include('accounts.urls')),
     path('appointments/', include('appointments.urls')),
+    path('payments/', include('payments.urls')),
 ]
 
 if settings.DEBUG:
