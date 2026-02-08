@@ -12,6 +12,9 @@ from accounts.models import User
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 import json
+from cmhsApp.decorators import premium_required
+from .models import JournalEntry
+from django.http import HttpResponse
 
 
 
@@ -64,6 +67,7 @@ def calendar_view(request):
 
     return render(request, 'appointments/calendar.html', context)
 @login_required
+@premium_required
 def book_appointment(request):
     if request.method == 'POST':
         form = BookingForm(request.POST)
@@ -99,13 +103,9 @@ def book_appointment(request):
     }
 
     return render(request, 'appointments/book_appointment.html', context)
-
 @login_required
 def log_session(request, appointment_id):
-    # 1. Get the appointment
     appointment = get_object_or_404(Appointment, id=appointment_id)
-
-    # 2. Security: Ensure the logged-in user is the assigned therapist
     if request.user != appointment.therapist:
         messages.error(request, "You are not authorized to log this session.")
         return redirect('therapist_dashboard')
@@ -135,24 +135,80 @@ def log_session(request, appointment_id):
         'form': form,
         'appointment': appointment
     })
-
 @login_required
+@premium_required
 def patient_resources(request):
-    # logs for the patients that actually have a file uploaded
+    # 1. Get Private Resources (Your existing logic)
+    # We use SessionLog because that is your actual database model
     resources = SessionLog.objects.filter(
         patient=request.user
     ).exclude(resources='').order_by('-session_date')
 
-    return render(request, 'appointments/patient_resources.html', {'resources': resources})
+    # 2. Define Public Resources (New Static Data)
+    public_resources = [
+        {
+            'category': 'General Mental Health',
+            'title': 'Understanding Mental Health (WHO)',
+            'desc': 'Key facts and determinants of mental well-being.',
+            'url': 'https://www.who.int/news-room/fact-sheets/detail/mental-health-strengthening-our-response',
+            'type': 'Article',
+            'color': 'bg-blue-100 text-blue-600'
+        },
+        {
+            'category': 'Anxiety & Stress',
+            'title': 'Grounding Techniques for Panic Attacks',
+            'desc': '5-4-3-2-1 Coping technique explained.',
+            'url': 'https://www.mayoclinic.org/diseases-conditions/anxiety/diagnosis-treatment/drc-20350967',
+            'type': 'Guide',
+            'color': 'bg-purple-100 text-purple-600'
+        },
+        {
+            'category': 'Depression',
+            'title': 'Coping with Depression',
+            'desc': 'Practical steps for self-care and recovery.',
+            'url': 'https://www.helpguide.org/articles/depression/coping-with-depression.htm',
+            'type': 'Article',
+            'color': 'bg-indigo-100 text-indigo-600'
+        },
+        {
+            'category': 'ADHD',
+            'title': 'Adult ADHD: Symptoms & Management',
+            'desc': 'How to stay organized and focused.',
+            'url': 'https://chadd.org/for-adults/overview/',
+            'type': 'Article',
+            'color': 'bg-orange-100 text-orange-600'
+        },
+        {
+            'category': 'Eating Disorders',
+            'title': 'Healthy Relationship with Food',
+            'desc': 'Recognizing signs and seeking help.',
+            'url': 'https://www.nationaleatingdisorders.org/help-support/contact-helpline',
+            'type': 'Support',
+            'color': 'bg-pink-100 text-pink-600'
+        },
+        {
+            'category': 'Video Resource',
+            'title': 'The Power of Vulnerability - Brené Brown',
+            'desc': 'One of the most watched TED talks on connection.',
+            'url': 'https://www.ted.com/talks/brene_brown_the_power_of_vulnerability',
+            'type': 'Video',
+            'color': 'bg-red-100 text-red-600'
+        },
+    ]
 
+    context = {
+        'resources': resources,
+        'public_resources': public_resources,
+    }
+
+    # Make sure this matches the template file name you are editing
+    return render(request, 'appointments/patient_resources.html', context)
 @login_required
 def patient_appointments(request):
     # all appointments for the patients are fetched
     appointments = Appointment.objects.filter(patient=request.user).order_by('-date', '-time')
 
     return render(request, 'appointments/patient_appointments.html', {'appointments': appointments})
-
-
 @login_required
 def log_mood(request, mood_value):
     # Check if they already logged today
@@ -166,9 +222,8 @@ def log_mood(request, mood_value):
         messages.info(request, "You have already logged your mood for today.")
 
     return redirect('dashboard')
-
-
 @login_required
+@premium_required
 def inbox(request, id=None):
     # 1. DETERMINE ACTIVE CHAT PARTNER
     chat_partner = None
@@ -211,10 +266,6 @@ def inbox(request, id=None):
         'chat_partner': chat_partner,
         'recent_contacts': recent_contacts,  # <--- Pass this to template
     })
-
-
-# appointments/views.py
-
 @login_required
 def get_chat_messages(request, partner_id):
     partner = get_object_or_404(User, id=partner_id)
@@ -233,7 +284,7 @@ def get_chat_messages(request, partner_id):
         # LOGIC: If I sent it, and it's not already deleted, I can edit/delete it.
         # No time limits anymore.
         is_owner = (msg.sender == request.user)
-        is_deleted = (msg.body == "🚫 This message was deleted")
+        is_deleted = (msg.body == "This message was deleted")
 
         data.append({
             'id': msg.id,
@@ -246,23 +297,19 @@ def get_chat_messages(request, partner_id):
         })
 
     return JsonResponse({'messages': data})
-
-
 @login_required
 def delete_message(request, msg_id):
     # Verify ownership ONLY
     message = get_object_or_404(Message, id=msg_id, sender=request.user)
 
     # Soft Delete
-    message.body = "🚫 This message was deleted"
+    message.body = "This message was deleted"
     message.save()
 
     if request.headers.get('x-requested-with') == 'XMLHttpRequest':
         return JsonResponse({'status': 'success'})
 
     return redirect('inbox_with_id', id=message.recipient.id)
-
-
 @login_required
 @csrf_exempt
 def edit_message(request, msg_id):
@@ -296,10 +343,8 @@ def cancel_appointment(request, id):
         messages.error(request, "You can only cancel pending appointments.")
 
     return redirect('patient_appointments')
-
 def assessment_hub(request):
     return render(request, 'appointments/assessment_hub.html')
-
 def take_assessment(request):
     if request.method == 'POST':
         # assessment scores categorization
@@ -362,7 +407,6 @@ def take_assessment(request):
         return render(request, 'appointments/public_result.html', context)
 
     return render(request, 'appointments/take_assessment.html')
-
 @login_required
 @csrf_exempt
 def send_chat_message(request):
@@ -381,3 +425,77 @@ def send_chat_message(request):
         return JsonResponse({'status': 'success'})
 
     return JsonResponse({'status': 'error'}, status=400)
+
+@login_required
+def journal_view(request):
+    if request.method == 'POST':
+        title = request.POST.get('title')
+        content = request.POST.get('content')
+        mood = request.POST.get('mood')
+
+        JournalEntry.objects.create(
+            patient=request.user,
+            title=title,
+            content=content,
+            mood_rating=mood
+        )
+        messages.success(request, "Journal entry saved.")
+        return redirect('journal')
+
+    entries = JournalEntry.objects.filter(patient=request.user).order_by('-created_at')
+    return render(request, 'appointments/journal.html', {'entries': entries})
+
+
+@csrf_exempt
+def ussd_callback(request):
+    if request.method == 'POST':
+        # AT sends the full chain of inputs (e.g., "1*1")
+        text = request.POST.get("text", "").strip()
+        text_parts = text.split('*') if text else []
+        level = len(text_parts)
+
+        response = ""
+
+        # LEVEL 0: MAIN MENU
+        if text == "":
+            response = "CON Welcome to CMHS\n1. Book Therapy\n2. Emergency Help\n3. My Account"
+
+        # LEVEL 1: HANDLING MAIN MENU CHOICES
+        elif level == 1:
+            if text_parts[0] == "1":
+                response = "CON Select Service:\n1. Depression Support\n2. Anxiety & Stress\n3. Addiction Recovery"
+            elif text_parts[0] == "2":
+                response = "CON ⚠️ EMERGENCY\nEnter your location for help:"
+            elif text_parts[0] == "3":
+                # Demonstrating personalization from your SRS REQ-5
+                response = "END My Account:\nPlan: Premium\nBal: KES 0.00\nStatus: Active"
+            else:
+                response = "END Invalid choice. Please dial again."
+
+        # LEVEL 2: HANDLING SUB-MENU CHOICES
+        elif level == 2:
+            # Handling Book Therapy -> Time Slots
+            if text_parts[0] == "1":
+                response = "CON Select Time Slot:\n1. Today 2:00 PM\n2. Tomorrow 10:00 AM"
+
+            # Handling Emergency Help -> Location Input
+            elif text_parts[0] == "2":
+                location = text_parts[1]
+                response = f"END ALERT RECEIVED!\nAmbulance dispatched to {location}.\nHelp is on the way."
+
+        # LEVEL 3: FINAL CONFIRMATIONS
+        elif level == 3:
+            if text_parts[0] == "1":
+                response = "END BOOKING SUCCESSFUL!\nYou will receive a confirmation SMS shortly. Recovery in Dignity."
+
+        else:
+            response = "END Session timed out or invalid input. Please try again."
+
+        return HttpResponse(response, content_type='text/plain')
+
+    return HttpResponse("USSD Gateway Active", content_type='text/plain')
+
+def ussd_simulator(request):
+
+    return render(request, 'ussd_simulator.html')
+
