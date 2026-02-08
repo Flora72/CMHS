@@ -3,6 +3,7 @@ from django.conf import settings
 from accounts.models import User
 
 
+
 class Appointment(models.Model):
     STATUS_CHOICES = [
         ('pending', 'Pending'),
@@ -121,3 +122,15 @@ class AssessmentResult(models.Model):
 
     def __str__(self):
         return f"{self.patient} - {self.test_type} ({self.score})"
+
+class JournalEntry(models.Model):
+    patient = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    title = models.CharField(max_length=200)
+    content = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)
+    mood_rating = models.CharField(max_length=20, choices=[
+        ('Great', 'Great'), ('Okay', 'Okay'), ('Low', 'Low'), ('Bad', 'Bad')
+    ], default='Okay')
+
+    def __str__(self):
+        return f"{self.patient} - {self.created_at.date()}"
