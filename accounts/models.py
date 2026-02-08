@@ -27,6 +27,8 @@ class User(AbstractUser):
     )
 
     role = models.CharField(max_length=20, choices=ROLE_CHOICES, default='patient')
+    is_premium = models.BooleanField(default=False)
+    is_high_risk = models.BooleanField(default=False)
     phone_number = models.CharField(max_length=15, unique=True)
     is_verified = models.BooleanField(default=False)
 
