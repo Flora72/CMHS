@@ -8,20 +8,20 @@ from appointments.models import Appointment, MoodEntry, Message
 from datetime import date
 from .models import User
 from django.utils import timezone
+from django.contrib import messages
 def home(request):
     return render(request, 'index.html')
-
 def register(request):
     if request.method == 'POST':
         form = PatientRegistrationForm(request.POST)
         if form.is_valid():
             user = form.save()
-            login(request, user)
-            return redirect('home')
+            messages.success(request, "Account created successfully! Please log in.")
+            return redirect('login')
+
     else:
         form = PatientRegistrationForm()
     return render(request, 'accounts/register.html', {'form': form})
-
 def login_view(request):
     if request.method == 'POST':
         form = AuthenticationForm(request, data=request.POST)
@@ -32,7 +32,7 @@ def login_view(request):
             if user.role == 'therapist':
                 return redirect('therapist_dashboard')
             else:
-                return redirect('patient_dashboard')
+                return redirect('dashboard')
 
     else:
         form = AuthenticationForm()
@@ -150,3 +150,20 @@ def settings_view(request):
         form = ProfileUpdateForm(instance=request.user)
 
     return render(request, 'accounts/settings.html', {'form': form})
+
+@login_required
+def toggle_risk(request, user_id):
+    # Security: Only therapists can do this
+    if request.user.role != 'therapist':
+        return redirect('dashboard')
+
+    patient = User.objects.get(pk=user_id)
+
+    # Flip the status (True -> False, or False -> True)
+    patient.is_high_risk = not patient.is_high_risk
+    patient.save()
+
+    status_msg = "High Risk" if patient.is_high_risk else "Normal Risk"
+    messages.warning(request, f"Patient flagged as {status_msg}.")
+
+    return redirect('therapist_patients')
