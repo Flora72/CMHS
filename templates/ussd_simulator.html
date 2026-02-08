@@ -1,0 +1,44 @@
+{% extends 'base.html' %}
+{% block title %}USSD Portal | CMHS{% endblock %}
+
+{% block content %}
+<div class="min-h-screen w-full bg-gradient-to-br from-gray-50 to-gray-100 flex flex-col">
+  <!-- Main content -->
+  <main class="flex flex-col items-center justify-center flex-1 gap-8 py-10">
+
+    <!-- USSD Code Badge -->
+    <div class="inline-flex items-center px-6 py-2 bg-green-100 text-green-700 rounded-full font-mono text-base shadow-sm">
+      *384*14590#
+    </div>
+    <p class="text-xs text-gray-500 font-mono uppercase tracking-widest">Dial code in simulator to test logic</p>
+
+    <!-- Phone Simulator Card -->
+    <div class="bg-white rounded-3xl shadow-xl p-6">
+      <div class="relative w-[340px] h-[680px] max-h-[75vh] bg-black rounded-[3.5rem] p-1 border border-gray-200 shadow-lg overflow-hidden">
+        <div class="w-full h-full rounded-[3.3rem] overflow-hidden relative bg-[#121212]">
+
+          <!-- Clip container -->
+          <div class="absolute inset-0 overflow-hidden rounded-[3.3rem]">
+            <iframe
+              src="https://developers.africastalking.com/simulator"
+              class="absolute"
+              style="
+                width: 100%;
+                height: 120%;
+                top: -50px;
+                left: 0;
+                border: none;
+                transform: scale(0.95);
+                transform-origin: top center;
+
+            </iframe>
+          </div>
+
+          <!-- Bottom bar -->
+          <div class="absolute bottom-2 left-1/2 -translate-x-1/2 w-24 h-1 bg-gray-300 rounded-full z-40"></div>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+{% endblock %}
