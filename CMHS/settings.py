@@ -13,7 +13,7 @@ SECRET_KEY = 'django-insecure-zu_@phyfzk+vi&xu&v26k9*zefpv!hy%j$!%gz^&l-dgnc1c6!
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['*']
+ALLOWED_HOSTS = ['*', 'alline-hirtellous-dario.ngrok-free.dev']
 
 # Application definition
 
@@ -27,6 +27,7 @@ INSTALLED_APPS = [
     'cmhsApp.apps.CmhsappConfig',
     'accounts',
     'appointments',
+    'payments',
 ]
 
 MIDDLEWARE = [
@@ -44,7 +45,7 @@ ROOT_URLCONF = 'CMHS.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [BASE_DIR / 'templates']
+        'DIRS': [BASE_DIR / 'payments/../templates']
         ,
         'APP_DIRS': True,
         'OPTIONS': {
@@ -108,4 +109,20 @@ USE_TZ = True
 
 STATIC_URL = 'static/'
 AUTH_USER_MODEL = 'accounts.User'
-EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+
+
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = 'perpymari@gmail.com'
+EMAIL_HOST_PASSWORD = 'wmec oxyy ljen gvns'
+
+
+# M-PESA CONFIGURATION (Sandbox)
+MPESA_ENVIRONMENT = 'sandbox'
+MPESA_CONSUMER_KEY = 'jXwNbMHUommAkHjNj9Az0it67zicDIyTVOGT0VFFAPA4y2hC'
+MPESA_CONSUMER_SECRET = 'O9B480y6uxxkv50i0ZF2oQFflnkldlyeY9AfA8jc4fHGG5yBlM83730EoOdksB6T'
+MPESA_SHORTCODE = '174379'
+MPESA_PASSKEY = 'bfb279f9aa9bdbcf158e97dd71a467cd2e0c893059b10f78e6b72ada1ed2c919'
+MPESA_INITIATOR_PASSWORD = 'YOUR_INITIATOR_PASSWORD'
