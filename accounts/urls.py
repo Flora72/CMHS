@@ -12,6 +12,7 @@ urlpatterns = [
     path('appointment/decline/<int:pk>/', views.decline_appointment, name='decline_appointment'),
     path('therapist-dashboard/', views.therapist_dashboard, name='therapist_dashboard'),
     path('dashboard/', views.dashboard, name='dashboard'),
+    path('patient/<int:user_id>/toggle-risk/', views.toggle_risk, name='toggle_risk'),
     path('settings/', views.settings_view, name='settings'),
     path('logout/', LogoutView.as_view(next_page='home'), name='logout')
 
