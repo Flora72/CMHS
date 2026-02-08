@@ -18,6 +18,9 @@
         <a href="{% url 'calendar' %}" class="text-white text-xl font-medium border-b border-blue-900 pb-2 hover:text-chiromo-gold">Calendar</a>
         <a href="{% url 'patient_appointments' %}" class="text-white text-xl font-medium border-b border-blue-900 pb-2 hover:text-chiromo-gold">My Appointments</a>
         <a href="{% url 'inbox' %}" class="text-white text-xl font-medium border-b border-blue-900 pb-2 hover:text-chiromo-gold">Messages</a>
+
+        <a href="{% url 'journal' %}" class="text-white text-xl font-medium border-b border-blue-900 pb-2 hover:text-chiromo-gold">My Journal</a>
+
         <a href="{% url 'patient_resources' %}" class="text-white text-xl font-medium border-b border-blue-900 pb-2 hover:text-chiromo-gold">Resources</a>
         <a href="{% url 'settings' %}" class="text-white text-xl font-medium border-b border-blue-900 pb-2 hover:text-chiromo-gold">Settings</a>
 
@@ -61,6 +64,11 @@
             <a href="{% url 'inbox' %}" class="flex items-center gap-3 px-4 py-3 {% if 'inbox' in request.path %}bg-white/10 text-white border-l-4 border-chiromo-gold{% else %}text-gray-300 hover:bg-white/5 hover:text-white{% endif %} rounded-lg transition">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
                 <span class="font-medium">Messages</span>
+            </a>
+
+            <a href="{% url 'journal' %}" class="flex items-center gap-3 px-4 py-3 {% if request.resolver_match.url_name == 'journal' %}bg-white/10 text-white border-l-4 border-chiromo-gold{% else %}text-gray-300 hover:bg-white/5 hover:text-white{% endif %} rounded-lg transition">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
+                <span class="font-medium">My Journal</span>
             </a>
 
             <a href="{% url 'patient_resources' %}" class="flex items-center gap-3 px-4 py-3 {% if request.resolver_match.url_name == 'patient_resources' %}bg-white/10 text-white border-l-4 border-chiromo-gold{% else %}text-gray-300 hover:bg-white/5 hover:text-white{% endif %} rounded-lg transition">
