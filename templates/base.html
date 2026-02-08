@@ -25,10 +25,10 @@
 </head>
 <body class="bg-gray-50 text-chiromo-grey font-sans antialiased flex flex-col min-h-screen">
 {% if messages %}
-    <div class="fixed top-5 right-5 z-50 flex flex-col gap-2">
+    <div class="fixed top-5 right-5 z-[100] flex flex-col gap-2 w-full max-w-sm">
         {% for message in messages %}
-            <div class="bg-white border-l-4 {% if message.tags == 'success' %}border-green-500{% else %}border-red-500{% endif %} shadow-xl rounded-lg p-4 flex items-center pr-12 relative animate-fade-in-down">
-                <div class="mr-3">
+            <div class="bg-white border-l-4 {% if message.tags == 'success' %}border-green-500{% else %}border-red-500{% endif %} shadow-2xl rounded-lg p-4 flex items-center pr-12 relative animate-fade-in-down mx-4 sm:mx-0">
+                <div class="mr-3 flex-shrink-0">
                     {% if message.tags == 'success' %}
                         <div class="bg-green-100 rounded-full p-2 text-green-600">
                             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
@@ -41,9 +41,9 @@
                 </div>
                 <div>
                     <h4 class="font-bold text-gray-800">Notification</h4>
-                    <p class="text-sm text-gray-600">{{ message }}</p>
+                    <p class="text-sm text-gray-600 break-words leading-tight">{{ message }}</p>
                 </div>
-                <button onclick="this.parentElement.remove()" class="absolute top-2 right-2 text-gray-400 hover:text-gray-600">
+                <button onclick="this.parentElement.remove()" class="absolute top-2 right-2 text-gray-400 hover:text-gray-600 p-1">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
                 </button>
             </div>
