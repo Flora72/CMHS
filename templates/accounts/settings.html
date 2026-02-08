@@ -1,6 +1,7 @@
 {% extends 'base.html' %}
 {% block title %}Account Settings | CMHS{% endblock %}
 {% block navbar %}{% endblock %}
+
 {% block content %}
 <div class="fixed inset-0 flex bg-gray-50 overflow-hidden font-sans">
 
@@ -14,6 +15,39 @@
 
         <div class="max-w-2xl mx-auto w-full">
             <h1 class="text-3xl font-bold text-chiromo-navy mb-8">Account Settings</h1>
+
+            <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden mb-8">
+                <div class="px-6 py-4 border-b border-gray-100 bg-gray-50 flex justify-between items-center">
+                    <h3 class="font-bold text-gray-800">Subscription Plan</h3>
+                    {% if user.is_premium %}
+                        <span class="bg-chiromo-gold/10 text-chiromo-gold text-xs px-2 py-1 rounded border border-chiromo-gold/20 font-bold uppercase tracking-wider">Active</span>
+                    {% else %}
+                        <span class="bg-gray-100 text-gray-500 text-xs px-2 py-1 rounded border border-gray-200 font-bold uppercase tracking-wider">Free Tier</span>
+                    {% endif %}
+                </div>
+
+                <div class="p-6 flex items-center justify-between">
+                    <div>
+                        {% if user.is_premium %}
+                            <h4 class="text-xl font-bold text-chiromo-navy flex items-center gap-2">
+                                Premium Access
+                                <svg class="w-5 h-5 text-chiromo-gold" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path></svg>
+                            </h4>
+                            <p class="text-sm text-gray-500 mt-1">You have full access to appointments & messaging.</p>
+                        {% else %}
+                            <h4 class="text-xl font-bold text-gray-700">Basic Plan</h4>
+                            <p class="text-sm text-gray-500 mt-1">Upgrade to unlock bookings and doctor chat.</p>
+                        {% endif %}
+                    </div>
+
+                    {% if not user.is_premium %}
+                        <a href="{% url 'pricing_page' %}" class="bg-chiromo-navy text-white text-sm font-bold px-4 py-2 rounded-lg hover:bg-blue-900 transition shadow-md flex items-center gap-2">
+                            Upgrade Now
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"></path></svg>
+                        </a>
+                    {% endif %}
+                </div>
+            </div>
 
             <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden mb-8">
                 <div class="px-6 py-4 border-b border-gray-100 bg-gray-50 flex justify-between items-center">
@@ -36,10 +70,16 @@
                             </div>
                         </div>
 
-                        <div>
-                            <label class="block text-sm font-bold text-gray-700 mb-2">Email Address</label>
-                            {{ form.email }}
-                            <p class="text-xs text-gray-400 mt-1">This email will be used for appointment notifications.</p>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div>
+                                <label class="block text-sm font-bold text-gray-700 mb-2">Email Address</label>
+                                {{ form.email }}
+                            </div>
+
+                            <div>
+                                <label class="block text-sm font-bold text-gray-700 mb-2">Phone Number</label>
+                                {{ form.phone_number }}
+                            </div>
                         </div>
 
                         <div class="pt-4 border-t border-gray-100 flex justify-end">
@@ -58,7 +98,6 @@
                 <div class="p-6 flex items-center justify-between">
                     <div>
                         <p class="font-bold text-chiromo-navy">Password</p>
-
                         <p class="text-sm text-gray-500 flex items-center gap-1">
                             <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                             Last login: {{ user.last_login|default:"First time"|date:"M j, Y, H:i " }}
