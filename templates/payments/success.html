@@ -1,0 +1,38 @@
+{% extends 'base.html' %}
+{% block title %}Payment Successful{% endblock %}
+{% block navbar %}{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-green-50 flex items-center justify-center p-4">
+    <div class="bg-white p-10 rounded-3xl shadow-xl max-w-md w-full text-center border border-green-100 relative overflow-hidden">
+        
+        <div class="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-green-400 to-teal-500"></div>
+
+        <div class="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6 shadow-sm">
+            <svg class="w-10 h-10 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>
+        </div>
+
+        <h1 class="text-3xl font-bold text-gray-800 mb-2">Payment Approved!</h1>
+        <p class="text-gray-500 mb-8">Your premium subscription is now active.</p>
+
+        <div class="bg-gray-50 rounded-xl p-4 mb-8 text-left space-y-3 text-sm border border-gray-100">
+            <div class="flex justify-between">
+                <span class="text-gray-500">Amount Paid</span>
+                <span class="font-bold text-gray-800">KES 1,500.00</span>
+            </div>
+            <div class="flex justify-between">
+                <span class="text-gray-500">Phone Number</span>
+                <span class="font-bold text-gray-800">{{ request.user.phone_number }}</span>
+            </div>
+            <div class="flex justify-between">
+                <span class="text-gray-500">Transaction ID</span>
+                <span class="font-mono text-gray-800">CONFIRMED</span>
+            </div>
+        </div>
+
+        <a href="{% url 'dashboard' %}" class="block w-full py-4 bg-chiromo-navy text-white font-bold rounded-xl shadow-lg hover:bg-blue-900 transition transform hover:-translate-y-1">
+            Go to Dashboard
+        </a>
+    </div>
+</div>
+{% endblock %}
