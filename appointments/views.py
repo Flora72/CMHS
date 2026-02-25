@@ -15,7 +15,9 @@ import json
 from cmhsApp.decorators import premium_required
 from .models import JournalEntry
 from django.http import HttpResponse
-
+from payments.sms_service import send_ussd_sms
+import uuid
+from django.contrib.auth.decorators import login_required
 
 
 @login_required
@@ -66,6 +68,7 @@ def calendar_view(request):
     }
 
     return render(request, 'appointments/calendar.html', context)
+
 @login_required
 @premium_required
 def book_appointment(request):
@@ -74,18 +77,32 @@ def book_appointment(request):
         if form.is_valid():
             appointment = form.save(commit=False)
             appointment.patient = request.user
+
+            # --- VIRTUAL LINK LOGIC ---
+            # If the session type is virtual, generate a unique link
+            # Assumes your model has a session_type field (Virtual/In-Person)
+            if appointment.mode == 'online':
+                # Creating a unique Jitsi link for the session
+                meeting_id = str(uuid.uuid4())[:8]
+                appointment.meeting_link = f"https://meet.jit.si/CMHS-{meeting_id}"
+            else:
+                appointment.meeting_link = ""
+
             appointment.save()
 
-            # email notification
+            # Updated email notification with the live link
             subject = 'Appointment Confirmed - Chiromo Hospital'
             message = f"""
             Dear {request.user.first_name},
             Your appointment has been successfully booked.
+
             Therapist: {appointment.therapist.username}
             Date: {appointment.date}
             Time: {appointment.time}
-            Link: {appointment.meeting_link or 'Pending'}
-            Thank you for choosing Chiromo.
+            Session Type: {appointment.mode}
+            Meeting Link: {appointment.meeting_link if appointment.meeting_link else 'Physical Session at Branch'}
+
+            Recovery in Dignity.
             """
             from_email = 'noreply@chiromo.com'
             recipient_list = [request.user.email]
@@ -101,7 +118,6 @@ def book_appointment(request):
         'form': form,
         'therapists': therapists
     }
-
     return render(request, 'appointments/book_appointment.html', context)
 @login_required
 def log_session(request, appointment_id):
@@ -425,7 +441,6 @@ def send_chat_message(request):
         return JsonResponse({'status': 'success'})
 
     return JsonResponse({'status': 'error'}, status=400)
-
 @login_required
 def journal_view(request):
     if request.method == 'POST':
@@ -445,12 +460,13 @@ def journal_view(request):
     entries = JournalEntry.objects.filter(patient=request.user).order_by('-created_at')
     return render(request, 'appointments/journal.html', {'entries': entries})
 
-
 @csrf_exempt
 def ussd_callback(request):
     if request.method == 'POST':
-        # AT sends the full chain of inputs (e.g., "1*1")
+        # Retrieve AT parameters
         text = request.POST.get("text", "").strip()
+        phone_number = request.POST.get("phoneNumber")
+
         text_parts = text.split('*') if text else []
         level = len(text_parts)
 
@@ -467,26 +483,48 @@ def ussd_callback(request):
             elif text_parts[0] == "2":
                 response = "CON ⚠️ EMERGENCY\nEnter your location for help:"
             elif text_parts[0] == "3":
-                # Demonstrating personalization from your SRS REQ-5
                 response = "END My Account:\nPlan: Premium\nBal: KES 0.00\nStatus: Active"
             else:
                 response = "END Invalid choice. Please dial again."
 
-        # LEVEL 2: HANDLING SUB-MENU CHOICES
+        # LEVEL 2: HANDLING SERVICE -> TIME SLOTS
         elif level == 2:
-            # Handling Book Therapy -> Time Slots
             if text_parts[0] == "1":
                 response = "CON Select Time Slot:\n1. Today 2:00 PM\n2. Tomorrow 10:00 AM"
-
-            # Handling Emergency Help -> Location Input
             elif text_parts[0] == "2":
                 location = text_parts[1]
                 response = f"END ALERT RECEIVED!\nAmbulance dispatched to {location}.\nHelp is on the way."
 
-        # LEVEL 3: FINAL CONFIRMATIONS
+        # LEVEL 3: HANDLING TIME -> BRANCH SELECTION
         elif level == 3:
             if text_parts[0] == "1":
-                response = "END BOOKING SUCCESSFUL!\nYou will receive a confirmation SMS shortly. Recovery in Dignity."
+                # Factual Chiromo Hospital Group branches
+                response = "CON Select Branch:\n1. Chiromo Lane (Main)\n2. Bustani (Lavington)\n3. Braeside Clinic"
+
+        # LEVEL 4: FINAL CONFIRMATION & SMS TRIGGER
+        elif level == 4:
+            if text_parts[0] == "1":
+                # Extract choices from the session chain
+                time_choice = text_parts[2]
+                branch_choice = text_parts[3]
+
+                # Logic to map choices to names
+                selected_time = "Today 2:00 PM" if time_choice == "1" else "Tomorrow 10:00 AM"
+
+                if branch_choice == "1":
+                    selected_branch = "Chiromo Lane (Main)"
+                elif branch_choice == "2":
+                    selected_branch = "Bustani (Lavington)"
+                else:
+                    selected_branch = "Braeside Clinic"
+
+                # Final confirmation message for inclusive access
+                success_msg = f"BOOKING SUCCESSFUL! Session at {selected_time} in {selected_branch} confirmed. Recovery in Dignity."
+
+                # TRIGGER THE PERSONALIZED SMS
+                send_ussd_sms(phone_number, selected_time, selected_branch)
+
+                response = f"END {success_msg}"
 
         else:
             response = "END Session timed out or invalid input. Please try again."
@@ -494,8 +532,7 @@ def ussd_callback(request):
         return HttpResponse(response, content_type='text/plain')
 
     return HttpResponse("USSD Gateway Active", content_type='text/plain')
-
 def ussd_simulator(request):
-
     return render(request, 'ussd_simulator.html')
+
 
