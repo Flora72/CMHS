@@ -1,0 +1,113 @@
+{% extends "admin/index.html" %}
+{% load i18n static %}
+
+{% block extrastyle %}
+{{ block.super }}
+<style>
+    .small-box { transition: transform .3s; border-radius: 12px !important; border: none !important; }
+    .small-box:hover { transform: translateY(-5px); }
+    .card { border-radius: 12px !important; border: none !important; box-shadow: 0 4px 12px rgba(0,0,0,0.05) !important; }
+
+    .info-tile {
+        background: #fff; border-radius: 12px; padding: 20px; text-align: center;
+        transition: 0.3s; border-bottom: 4px solid #dee2e6; height: 100%;
+    }
+    .info-tile:hover { background: #f8f9fa; border-bottom-color: #AC8341; }
+    .info-tile i { font-size: 1.8rem; margin-bottom: 8px; display: block; }
+
+    #content-main { width: 100% !important; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-lg-3 col-6">
+            <div class="small-box shadow-sm" style="background-color: #00183E; color: white; border-bottom: 5px solid #AC8341;">
+                <div class="inner"><h3>KES {{ total_revenue|default:"0" }}</h3><p>M-Pesa Revenue</p></div>
+                <div class="icon"><i class="fas fa-wallet" style="color: rgba(172, 131, 65, 0.3);"></i></div>
+            </div>
+        </div>
+        <div class="col-lg-3 col-6">
+            <div class="small-box shadow-sm" style="background-color: #00183E; color: white; border-bottom: 5px solid #AC8341;">
+                <div class="inner"><h3>{{ ussd_intake|default:"0" }}</h3><p>USSD Bookings</p></div>
+                <div class="icon"><i class="fas fa-mobile-alt" style="color: rgba(172, 131, 65, 0.3);"></i></div>
+            </div>
+        </div>
+        <div class="col-lg-3 col-6">
+            <div class="small-box shadow-sm" style="background-color: #00183E; color: white; border-bottom: 5px solid #AC8341;">
+                <div class="inner"><h3>{{ pending_sessions|default:"0" }}</h3><p>Pending Review</p></div>
+                <div class="icon"><i class="fas fa-clock" style="color: rgba(172, 131, 65, 0.3);"></i></div>
+            </div>
+        </div>
+        <div class="col-lg-3 col-6">
+            <div class="small-box shadow-sm" style="background-color: #00183E; color: white; border-bottom: 5px solid #AC8341;">
+                <div class="inner"><h3>{{ total_appointments|default:"0" }}</h3><p>All Appointments</p></div>
+                <div class="icon"><i class="fas fa-users" style="color: rgba(172, 131, 65, 0.3);"></i></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mt-4">
+        <div class="col-md-9">
+            <div class="card shadow">
+                <div class="card-header" style="background-color: #AC8341; color: white;">
+                    <h3 class="card-title"><i class="fas fa-chart-pie mr-2"></i> Source Analysis</h3>
+                </div>
+                <div class="card-body">
+                    <div style="min-height: 280px; height: 280px;"><canvas id="bookingChart"></canvas></div>
+                </div>
+            </div>
+        </div>
+        <div class="card-body text-center p-3">
+    <p class="small text-muted mb-3">Review data before PDF export.</p>
+
+    <a href="{% url 'preview_appointments_report' %}" class="btn btn-outline-dark btn-block btn-sm mb-2">Review Clinical</a>
+    <a href="{% url 'preview_payments_report' %}" class="btn btn-outline-success btn-block btn-sm mb-2">Review Financial</a>
+
+    <a href="{% url 'admin:accounts_user_changelist' %}" class="btn btn-outline-primary btn-block btn-sm mb-2">
+        <i class="fas fa-users mr-2"></i> Export Customer Report
+    </a>
+    <a href="{% url 'admin:appointments_appointment_changelist' %}" class="btn btn-outline-warning btn-block btn-sm" style="color:#AC8341; border-color:#AC8341;">
+        <i class="fas fa-calendar-alt mr-2"></i> Full Schedules
+    </a>
+</div>
+    </div>
+
+    <div class="row mt-4 pb-5">
+        <div class="col-md-3"><div class="info-tile shadow-sm"><i class="fas fa-user-shield" style="color: #00183E;"></i><h6>Staff</h6><a href="{% url 'admin:accounts_user_changelist' %}" class="btn btn-xs btn-outline-dark">Manage</a></div></div>
+        <div class="col-md-3"><div class="info-tile shadow-sm"><i class="fas fa-notes-medical" style="color: #AC8341;"></i><h6>Records</h6><a href="{% url 'admin:appointments_appointment_changelist' %}" class="btn btn-xs btn-outline-dark">Review</a></div></div>
+        <div class="col-md-3"><div class="info-tile shadow-sm"><i class="fas fa-history" style="color: #6c757d;"></i><h6>Logs</h6><a href="{% url 'admin:appointments_sessionlog_changelist' %}" class="btn btn-xs btn-outline-dark">Audit</a></div></div>
+        <div class="col-md-3"><div class="info-tile shadow-sm"><i class="fas fa-cogs" style="color: #00183E;"></i><h6>Config</h6><a href="{% url 'admin:accounts_user_changelist' %}" class="btn btn-xs btn-outline-dark">Settings</a></div></div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        const ctx = document.getElementById('bookingChart').getContext('2d');
+
+
+        const ussdVal = {{ ussd_intake|default:0 }};
+        const webVal = {{ web_intake|default:0 }};
+
+        new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: ['USSD Intake', 'Web Intake'],
+                datasets: [{
+                    data: [ussdVal, webVal],
+                    backgroundColor: ['#AC8341', '#00183E'],
+                    borderColor: '#ffffff',
+                    borderWidth: 4
+                }]
+            },
+            options: {
+                responsive: true, maintainAspectRatio: false, cutout: '75%',
+                plugins: { legend: { position: 'bottom', labels: { font: { weight: 'bold' } } } }
+            }
+        });
+    });
+</script>
+
+{% endblock %}
