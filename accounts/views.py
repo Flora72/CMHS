@@ -163,7 +163,7 @@ def toggle_risk(request, user_id):
     patient.is_high_risk = not patient.is_high_risk
     patient.save()
 
-    status_msg = "High Risk" if patient.is_high_risk else "Normal Risk"
+    status_msg = "High Risk" if patient.is_high_risk else "Not a risk"
     messages.warning(request, f"Patient flagged as {status_msg}.")
 
     return redirect('therapist_patients')
