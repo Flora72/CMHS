@@ -1,4 +1,5 @@
 from pathlib import Path
+import os
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -18,6 +19,7 @@ ALLOWED_HOSTS = ['*', 'alline-hirtellous-dario.ngrok-free.dev']
 # Application definition
 
 INSTALLED_APPS = [
+    'jazzmin',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -45,8 +47,8 @@ ROOT_URLCONF = 'CMHS.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [BASE_DIR / 'payments/../templates']
-        ,
+         'DIRS': [BASE_DIR / 'templates'],
+
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -64,14 +66,23 @@ WSGI_APPLICATION = 'CMHS.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/6.0/ref/settings/#databases
 
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.sqlite3',
+#         'NAME': BASE_DIR / 'db.sqlite3',
+#     }
+# }
+
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+    'default' : {
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': 'cmhs_db',
+        'USER': 'postgres',
+        'PASSWORD': '1234',
+        'HOST': 'localhost',
+        'PORT': '5432',
     }
 }
-
-
 # Password validation
 # https://docs.djangoproject.com/en/6.0/ref/settings/#auth-password-validators
 
@@ -101,12 +112,14 @@ TIME_ZONE = 'Africa/Nairobi'
 
 USE_I18N = True
 
-# KEEP THIS AS TRUE
-# This tells Django: "Store dates in UTC database, but convert them to Nairobi time when showing the user."
 USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/6.0/howto/static-files/
 
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+STATICFILES_DIRS = [
+    os.path.join(BASE_DIR, 'static'),
+]
 STATIC_URL = 'static/'
 AUTH_USER_MODEL = 'accounts.User'
 
@@ -126,3 +139,70 @@ MPESA_CONSUMER_SECRET = 'O9B480y6uxxkv50i0ZF2oQFflnkldlyeY9AfA8jc4fHGG5yBlM83730
 MPESA_SHORTCODE = '174379'
 MPESA_PASSKEY = 'bfb279f9aa9bdbcf158e97dd71a467cd2e0c893059b10f78e6b72ada1ed2c919'
 MPESA_INITIATOR_PASSWORD = 'YOUR_INITIATOR_PASSWORD'
+
+JAZZMIN_SETTINGS = {
+    # --- Site Identity ---
+    "site_title": "Admin Dashboard",
+    "site_header": "Chiromo MHS",
+    "site_brand": "Online CMHS",
+
+    # Official Logo from Web
+    "site_logo": "images/chiromo_logo.png",
+    "login_logo": "images/chiromo_logo.png",
+    "site_logo_classes": "img-fluid",
+
+    "welcome_sign": "Chiromo Mental Health System",
+    "copyright": "Chiromo Hospital Group © 2026",
+    "search_model": ["accounts.User", "appointments.Appointment", "payments.Transaction"],
+
+    # --- TOP NAVBAR ---
+    "topmenu_links": [
+        {"name": "Home", "url": "admin:index", "permissions": ["auth.view_user"]},
+        {"name": "View Site", "url": "/", "new_window": True},
+        {"name": "Sign Out", "url": "#logout", "icon": "fas fa-sign-out-alt"},
+    ],
+
+    # --- SIDEBAR CONFIGURATION ---
+    "show_sidebar": True,
+    "navigation_expanded": True,
+    "order_with_respect_to": ["accounts", "appointments", "payments"],
+
+    "hide_models": [
+        "appointments.SessionLog",
+        "auth.Group",
+    ],
+
+    "icons": {
+        "accounts.user": "fas fa-user-md",
+        "appointments.appointment": "fas fa-calendar-check",
+        "payments.transaction": "fas fa-file-invoice-dollar",
+    },
+
+    # --- SIDEBAR PDF LINK ---
+    "custom_links": {
+        "appointments": [
+            {
+                "name": "Download PDF Summary",
+                "url": "export_appointments_pdf",
+                "icon": "fas fa-file-pdf",
+                "permissions": ["auth.view_user"]
+            }
+        ],
+    },
+
+    "use_google_fonts": True,
+    "show_ui_builder": False,
+    "theme": "flatly",
+}
+
+JAZZMIN_UI_TUNER = {
+    "navbar": "navbar-navy",
+    "sidebar": "sidebar-dark-navy",
+    "accent": "accent-warning",
+    "brand_colour": "navbar-navy",
+    "navbar_fixed": True,
+    "sidebar_fixed": True,
+    "no_navbar_border": True,
+}
+
+LOGOUT_REDIRECT_URL = '/'
