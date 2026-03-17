@@ -1,6 +1,7 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 import calendar
+from datetime import date, time, timedelta
 from datetime import datetime
 from django.utils import timezone
 from django.contrib import messages
@@ -14,12 +15,85 @@ from django.views.decorators.csrf import csrf_exempt
 import json
 from cmhsApp.decorators import premium_required
 from .models import JournalEntry
-from django.http import HttpResponse
 from payments.sms_service import send_ussd_sms
 import uuid
-from django.contrib.auth.decorators import login_required
+from django.http import HttpResponse
+from reportlab.pdfgen import canvas
+from reportlab.lib.pagesizes import letter
+from reportlab.lib import colors
+from reportlab.lib.units import inch
+from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph
+from reportlab.lib.styles import getSampleStyleSheet
+from .models import Appointment
+from payments.models import Transaction
 
 
+
+# ---------------------------------------------
+# ADMIN SIDE VIEWS (PDF GENERATION)
+# ---------------------------------------------
+def preview_appointments_report(request):
+    data = Appointment.objects.all().order_by('-date')
+    return render(request, 'admin/report_preview.html', {
+        'title': 'Clinical Appointment Summary',
+        'data': data,
+        'type': 'clinical',
+        'export_url': 'export_appointments_pdf'
+    })
+
+
+def preview_payments_report(request):
+    data = Transaction.objects.filter(status='completed').order_by('-timestamp')
+    return render(request, 'admin/report_preview.html', {
+        'title': 'Financial Transaction Summary',
+        'data': data,
+        'type': 'financial',
+        'export_url': 'export_payments_pdf'
+    })
+
+
+# --- PDF GENERATION ENGINE ---
+def generate_pdf(filename, title, headers, data):
+    response = HttpResponse(content_type='application/pdf')
+    response['Content-Disposition'] = f'attachment; filename="{filename}.pdf"'
+
+    doc = SimpleDocTemplate(response, pagesize=letter)
+    elements = []
+    styles = getSampleStyleSheet()
+
+    elements.append(Paragraph("Chiromo Mental Health System", styles['Title']))
+    elements.append(Paragraph(title, styles['Heading2']))
+    elements.append(Paragraph("<br/><br/>", styles['Normal']))
+
+    table_data = [headers] + data
+    table = Table(table_data, hAlign='LEFT')
+    table.setStyle(TableStyle([
+        ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor("#00183E")),  # Navy
+        ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+        ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+        ('GRID', (0, 0), (-1, -1), 1, colors.grey),
+        ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+    ]))
+    elements.append(table)
+    doc.build(elements)
+    return response
+
+
+def export_appointments_pdf(request):
+    apps = Appointment.objects.all()
+    data = [[a.patient.username, a.therapist.username, a.date.strftime('%Y-%m-%d'), a.status] for a in apps]
+    return generate_pdf("Clinical_Report", "Clinical Appointment Summary", ['Patient', 'Therapist', 'Date', 'Status'],
+                        data)
+
+
+def export_payments_pdf(request):
+    trans = Transaction.objects.filter(status='completed')
+    data = [[t.transaction_id, f"KES {t.amount}", t.timestamp.strftime('%Y-%m-%d')] for t in trans]
+    return generate_pdf("Financial_Report", "Financial Transaction Summary", ['Transaction ID', 'Amount', 'Date'], data)
+
+# ---------------------------------------------
+# CLIENT SIDE VIEWS
+# ---------------------------------------------
 @login_required
 def calendar_view(request):
     today = datetime.now()
@@ -361,68 +435,77 @@ def cancel_appointment(request, id):
     return redirect('patient_appointments')
 def assessment_hub(request):
     return render(request, 'appointments/assessment_hub.html')
+
+
 def take_assessment(request):
-    if request.method == 'POST':
-        # assessment scores categorization
+    # Get the disorder type from the URL, default to 'general'
+    disorder_type = request.GET.get('type', 'general')
 
-        # Anxiety Questions (Q1-Q3)
-        a1 = int(request.POST.get('q1', 0))
-        a2 = int(request.POST.get('q2', 0))
-        a3 = int(request.POST.get('q3', 0))
-        anxiety_total = a1 + a2 + a3
-
-        # Depression Questions (Q4-Q6)
-        d1 = int(request.POST.get('q4', 0))
-        d2 = int(request.POST.get('q5', 0))
-        d3 = int(request.POST.get('q6', 0))
-        depression_total = d1 + d2 + d3
-
-        # Addiction Questions (Q7-Q9)
-        s1 = int(request.POST.get('q7', 0))
-        s2 = int(request.POST.get('q8', 0))
-        s3 = int(request.POST.get('q9', 0))
-        substance_total = s1 + s2 + s3
-
-        result_title = "General Mental Wellness"
-        result_desc = "Your responses suggest you are coping well, but regular check-ins are healthy."
-        recommended_specialty = 'general'
-
-        # High Substance Risk (Priority)
-        if substance_total >= 5:
-            result_title = "Risk of Substance Use Disorder"
-            result_desc = "Your responses indicate signs of dependency or substance misuse. Professional support is highly recommended to manage this safely."
-            recommended_specialty = 'addiction'
-
-        # High Depression Risk
-        elif depression_total >= 6:
-            result_title = "Signs of Moderate to Severe Depression"
-            result_desc = "You reported frequent low mood and loss of interest. A Clinical Psychologist can help you develop coping strategies."
-            recommended_specialty = 'clinical'
-
-        # High Anxiety Risk
-        elif anxiety_total >= 6:
-            result_title = "High Anxiety & Stress Levels"
-            result_desc = "You seem to be experiencing significant worry or inability to relax. A therapist can help with stress management techniques."
-            recommended_specialty = 'general'
-
-        # Moderate Mix
-        elif anxiety_total >= 4 or depression_total >= 4:
-            result_title = "Mild Emotional Distress"
-            result_desc = "You are experiencing some symptoms of stress or low mood. Early intervention with a counselor can prevent this from worsening."
-            recommended_specialty = 'general'
-
-        # --- 3. SEND TO RESULT PAGE ---
-        context = {
-            'result_title': result_title,
-            'result_desc': result_desc,
-            'specialty': recommended_specialty,
-            'score_a': anxiety_total,  # Optional: Show them their breakdown
-            'score_d': depression_total,
-            'score_s': substance_total,
+    # Clinical Question Bank
+    assessment_data = {
+        'general': {
+            'title': 'General Mental Health Check-in',
+            'theme_color': 'chiromo-navy',
+            'questions': [
+                {'id': 'q_dep', 'label': 'Little interest or pleasure in doing things? (Mood)'},
+                {'id': 'q_anx', 'label': 'Feeling nervous, anxious or on edge? (Anxiety)'},
+                {'id': 'q_sub', 'label': 'Have you felt you ought to cut down on your drinking or drug use? (Habits)'},
+                {'id': 'q_slp', 'label': 'Trouble falling or staying asleep, or sleeping too much? (Sleep)'},
+            ]
+        },
+        'depression': {
+            'title': 'Depression Screening (PHQ-9)',
+            'theme_color': 'purple',
+            'questions': [
+                {'id': 'q1', 'label': 'Little interest or pleasure in doing things'},
+                {'id': 'q2', 'label': 'Feeling down, depressed, or hopeless'},
+                {'id': 'q3', 'label': 'Trouble falling or staying asleep, or sleeping too much'}
+            ]
+        },
+        'anxiety': {
+            'title': 'Anxiety Screening (GAD-7)',
+            'theme_color': 'blue',
+            'questions': [
+                {'id': 'q1', 'label': 'Feeling nervous, anxious or on edge'},
+                {'id': 'q2', 'label': 'Not being able to stop or control worrying'},
+                {'id': 'q3', 'label': 'Trouble relaxing'}
+            ]
+        },
+        'substance': {
+            'title': 'Substance Use Screening (CAGE)',
+            'theme_color': 'orange',
+            'questions': [
+                {'id': 'q1', 'label': 'Have you ever felt you ought to cut down on your drinking or drug use?'},
+                {'id': 'q2', 'label': 'Have people annoyed you by criticizing your drinking or drug use?'},
+                {'id': 'q3', 'label': 'Have you ever felt bad or guilty about your drinking or drug use?'}
+            ]
+        },
+        'ptsd': {
+            'title': 'PTSD Screening (PC-PTSD-5)',
+            'theme_color': 'indigo',
+            'questions': [
+                {'id': 'q1',
+                 'label': 'Have you had nightmares about the event or thought about it when you did not want to?'},
+                {'id': 'q2',
+                 'label': 'Tried hard not to think about the event or went out of your way to avoid situations that reminded you of it?'},
+                {'id': 'q3', 'label': 'Were you constantly on guard, watchful, or easily startled?'}
+            ]
         }
-        return render(request, 'appointments/public_result.html', context)
+    }
 
-    return render(request, 'appointments/take_assessment.html')
+    # Fallback to general if type doesn't match
+    context = assessment_data.get(disorder_type, assessment_data['general'])
+
+    if request.method == 'POST':
+        # Here you would calculate the score and redirect to results
+        # For now, we'll just simulate a result based on the type
+        return render(request, 'appointments/public_result.html', {
+            'result_title': f"Analysis for {context['title']}",
+            'result_desc': "Your responses suggest a moderate level of symptoms. This screening is not a diagnosis, but an indicator that speaking with a professional could be beneficial.",
+            'specialty': 'clinical' if disorder_type in ['depression', 'anxiety', 'ptsd'] else 'addiction'
+        })
+
+    return render(request, 'appointments/take_assessment.html', context)
 @login_required
 @csrf_exempt
 def send_chat_message(request):
@@ -463,75 +546,86 @@ def journal_view(request):
 @csrf_exempt
 def ussd_callback(request):
     if request.method == 'POST':
-        # Retrieve AT parameters
         text = request.POST.get("text", "").strip()
         phone_number = request.POST.get("phoneNumber")
 
         text_parts = text.split('*') if text else []
         level = len(text_parts)
-
         response = ""
 
-        # LEVEL 0: MAIN MENU
+        # LEVEL 0 to 4
         if text == "":
             response = "CON Welcome to CMHS\n1. Book Therapy\n2. Emergency Help\n3. My Account"
-
-        # LEVEL 1: HANDLING MAIN MENU CHOICES
         elif level == 1:
             if text_parts[0] == "1":
                 response = "CON Select Service:\n1. Depression Support\n2. Anxiety & Stress\n3. Addiction Recovery"
             elif text_parts[0] == "2":
-                response = "CON ⚠️ EMERGENCY\nEnter your location for help:"
-            elif text_parts[0] == "3":
-                response = "END My Account:\nPlan: Premium\nBal: KES 0.00\nStatus: Active"
+                response = "CON EMERGENCY\nEnter your location:"
             else:
-                response = "END Invalid choice. Please dial again."
-
-        # LEVEL 2: HANDLING SERVICE -> TIME SLOTS
+                response = "END Invalid choice."
         elif level == 2:
-            if text_parts[0] == "1":
-                response = "CON Select Time Slot:\n1. Today 2:00 PM\n2. Tomorrow 10:00 AM"
-            elif text_parts[0] == "2":
-                location = text_parts[1]
-                response = f"END ALERT RECEIVED!\nAmbulance dispatched to {location}.\nHelp is on the way."
-
-        # LEVEL 3: HANDLING TIME -> BRANCH SELECTION
+            response = "CON Select Time:\n1. Today 2:00 PM\n2. Tomorrow 10:00 AM\n3. Monday 9:00 AM"
         elif level == 3:
-            if text_parts[0] == "1":
-                # Factual Chiromo Hospital Group branches
-                response = "CON Select Branch:\n1. Chiromo Lane (Main)\n2. Bustani (Lavington)\n3. Braeside Clinic"
-
-        # LEVEL 4: FINAL CONFIRMATION & SMS TRIGGER
+            response = "CON Select Branch:\n1. Chiromo Lane (Main)\n2. Bustani (Lavington)\n3. Braeside Clinic"
         elif level == 4:
-            if text_parts[0] == "1":
-                # Extract choices from the session chain
+            response = "CON Enter your Full Name to confirm:"
+
+        elif level == 5:
+            try:
+                service_choice = text_parts[1]
                 time_choice = text_parts[2]
                 branch_choice = text_parts[3]
+                user_name = text_parts[4]
 
-                # Logic to map choices to names
-                selected_time = "Today 2:00 PM" if time_choice == "1" else "Tomorrow 10:00 AM"
+                curr_date = date.today()
 
-                if branch_choice == "1":
-                    selected_branch = "Chiromo Lane (Main)"
-                elif branch_choice == "2":
-                    selected_branch = "Bustani (Lavington)"
+                if time_choice == "1":
+                    d, t = curr_date, time(14, 0)
+                elif time_choice == "2":
+                    d, t = curr_date + timedelta(days=1), time(10, 0)
                 else:
-                    selected_branch = "Braeside Clinic"
+                    d, t = curr_date + timedelta(days=2), time(9, 0)
 
-                # Final confirmation message for inclusive access
-                success_msg = f"BOOKING SUCCESSFUL! Session at {selected_time} in {selected_branch} confirmed. Recovery in Dignity."
+                branches = {"1": "Chiromo Lane", "2": "Bustani", "3": "Braeside"}
+                selected_branch = branches.get(branch_choice, "Main Branch")
 
-                # TRIGGER THE PERSONALIZED SMS
-                send_ussd_sms(phone_number, selected_time, selected_branch)
+                # Handle User lookup/creation
+                patient = User.objects.filter(phone_number=phone_number).first()
+                if not patient:
+                    patient = User.objects.create(
+                        username=phone_number,
+                        first_name=user_name,
+                        phone_number=phone_number
+                    )
+                else:
+                    patient.first_name = user_name
+                    patient.save()
 
-                response = f"END {success_msg}"
+                # Assign Therapist
+                therapist = User.objects.filter(is_staff=True).first()
 
-        else:
-            response = "END Session timed out or invalid input. Please try again."
+                # --- SAVE THE APPOINTMENT ---
+                Appointment.objects.create(
+                    patient=patient,
+                    therapist=therapist,
+                    date=d,
+                    time=t,
+                    mode='physical',
+                    status='pending',
+                    notes=f"Branch: {selected_branch}. Service: {service_choice}"
+                )
+
+                # --- SEND SMS ---
+                sms_text = f"Thank you {user_name}! Your session at {selected_branch} is confirmed for {d} at {t}."
+                send_ussd_sms(phone_number, sms_text)
+
+                response = f"END {sms_text}"
+
+            except Exception as e:
+                print(f"USSD Final Level Error: {e}")
+                response = "END Sorry, an error occurred. Please try again."
 
         return HttpResponse(response, content_type='text/plain')
-
-    return HttpResponse("USSD Gateway Active", content_type='text/plain')
 def ussd_simulator(request):
     return render(request, 'ussd_simulator.html')
 
