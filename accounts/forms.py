@@ -40,9 +40,9 @@ class ProfileUpdateForm(forms.ModelForm):
 class TherapistRegistrationForm(UserCreationForm):
     class Meta:
         model = User
-        fields = ['first_name', 'last_name', 'username', 'email', 'specialization']  # Added specialization
+        fields = ['first_name', 'last_name', 'username', 'email', 'specialization']
 
-    # Optional: Style the dropdown
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields['specialization'].widget.attrs.update({
