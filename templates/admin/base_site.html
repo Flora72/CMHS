@@ -1,0 +1,33 @@
+{% extends "admin/base_site.html" %}
+
+{% block extrahead %}
+{{ block.super }}
+<style>
+    /* Global Navy and Gold Branding */
+    .main-header { background-color: #AC8341 !important; }
+    .main-sidebar { background-color: #00183E !important; }
+    .brand-link { background-color: #00183E !important; border-bottom: 1px solid rgba(255,255,255,0.1) !important; }
+    .nav-link.active { background-color: #AC8341 !important; color: white !important; }
+</style>
+{% endblock %}
+
+{% block footer %}
+{{ block.super }}
+<form id="hidden-logout-form" action="{% url 'admin:logout' %}" method="post" style="display: none;">
+    {% csrf_token %}
+    <input type="hidden" name="next" value="/">
+</form>
+
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    // This intercepts the Navbar link we set in JAZZMIN_SETTINGS
+    const logoutLinks = document.querySelectorAll('a[href*="logout"]');
+    logoutLinks.forEach(link => {
+        link.addEventListener("click", function(e) {
+            e.preventDefault();
+            document.getElementById('hidden-logout-form').submit();
+        });
+    });
+});
+</script>
+{% endblock %}
