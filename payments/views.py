@@ -2,12 +2,13 @@ from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.views.decorators.csrf import csrf_exempt
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponse
 from .models import Transaction
 from .mpesa import lipa_na_mpesa_online
 import json
 from django.core.mail import send_mail
 from .sms_service import send_ussd_sms
+
 
 
 @login_required
@@ -29,39 +30,43 @@ def initiate_payment(request):
             messages.error(request, "Please enter a phone number.")
             return redirect('pricing_page')
 
-        # Format for Africa's Talking (+254...)
-        if phone.startswith('0'):
-            formatted_phone = '+254' + phone[1:]
-        elif phone.startswith('254'):
-            formatted_phone = '+' + phone
-        else:
-            formatted_phone = phone
+        # 1. Format for Africa's Talking / M-Pesa (+254...)
+        formatted_phone = '+254' + phone[1:] if phone.startswith('0') else '+' + phone if phone.startswith(
+            '254') else phone
 
+        # 2. Create the Transaction record
         transaction = Transaction.objects.create(
             user=user,
-            phone_number=phone,
+            phone_number=formatted_phone,
             amount=1500,
             status='pending'
         )
 
-        callback_url = "https://google.com"
-        response = lipa_na_mpesa_online(phone, 1500, callback_url)
+        # 3. Trigger M-Pesa STK Push
+        # FIX: Point this to mpesa-callback, NOT ussd-callback
+        callback_url = "https://alline-hirtellous-dario.ngrok-free.dev/appointments/mpesa-callback/"
+        res = lipa_na_mpesa_online(formatted_phone, 1500, callback_url)
 
-        if response.get('ResponseCode') == '0':
-            transaction.checkout_request_id = response['CheckoutRequestID']
-            transaction.status = 'completed'
+        if res.get('ResponseCode') == '0':
+            transaction.checkout_request_id = res['CheckoutRequestID']
+            transaction.status = 'completed'  # Instant activation for your demo
             transaction.save()
 
             user.is_premium = True
             user.save()
 
-            # 📧 1. SEND EMAIL (SRS REQ-3)
-            subject = "Payment Confirmed - Premium Access Unlocked"
-            email_message = f"Dear {user.first_name},\n\nYour KES 1,500 payment is confirmed. Transaction: {transaction.checkout_request_id}."
-            send_mail(subject, email_message, "notifications@chiromo.co.ke", [user.email])
+            # --- RESTORED: SEND EMAIL ---
+            subject = "Payment Confirmed - CMHS Premium Access"
+            email_message = (
+                f"Dear {user.first_name},\n\n"
+                f"Your payment of KES 1,500 for the Online Chiromo Mental Health System is confirmed.\n"
+                f"Transaction ID: {transaction.checkout_request_id}\n\n"
+                f"Your Premium features are now unlocked. Recovery in Dignity."
+            )
+            send_mail(subject, email_message, "perpymari@gmail.com", [user.email])
 
-            # 📱 2. SEND SMS (SRS REQ-5 / SDS Context Diagram)
-            sms_text = f"Hello {user.first_name}, your KES 1,500 payment to Chiromo MHS is confirmed. Transaction: {transaction.checkout_request_id}. Recovery in Dignity."
+            # --- RESTORED: SEND SMS (2-argument fix) ---
+            sms_text = f"Hello {user.first_name}, your KES 1,500 payment to CMHS is confirmed. Transaction: {transaction.checkout_request_id}."
             send_ussd_sms(formatted_phone, sms_text)
 
             messages.success(request, f"Notification sent to {phone}. Premium unlocked!")
@@ -70,29 +75,24 @@ def initiate_payment(request):
         else:
             transaction.status = 'failed'
             transaction.save()
-            messages.error(request, f"M-Pesa Error: {response.get('errorMessage')}")
+            messages.error(request, f"M-Pesa Error: {res.get('errorMessage')}")
             return redirect('dashboard')
 
     return redirect('pricing_page')
 
-
 @csrf_exempt
 def mpesa_callback(request):
     if request.method == 'POST':
-        data = json.loads(request.body)
-        stk = data.get('Body', {}).get('stkCallback', {})
-
-        if stk.get('ResultCode') == 0:
-            checkout_id = stk.get('CheckoutRequestID')
-            try:
-                tx = Transaction.objects.get(checkout_request_id=checkout_id)
+        try:
+            data = json.loads(request.body)
+            stk = data.get('Body', {}).get('stkCallback', {})
+            if stk.get('ResultCode') == 0:
+                tx = Transaction.objects.get(checkout_request_id=stk.get('CheckoutRequestID'))
                 tx.status = 'completed'
                 tx.save()
-
-                # Activate User
-                tx.user.is_premium = True
-                tx.user.save()
-            except Transaction.DoesNotExist:
-                pass
-
+                user = tx.user
+                user.is_premium = True
+                user.save()
+        except Exception as e:
+            print(f"Callback Error: {e}")
     return JsonResponse({'status': 'ok'})
