@@ -21,7 +21,6 @@ class User(AbstractUser):
     specialization = models.CharField(
         max_length=50,
         choices=SPECIALIZATION_CHOICES,
-        default='general',
         blank=True,
         null=True
     )
@@ -34,3 +33,9 @@ class User(AbstractUser):
 
     def __str__(self):
         return f"{self.username} ({self.get_role_display()})"
+
+    def save(self, *args, **kwargs):
+
+        if self.role == 'patient':
+            self.specialization = None
+        super().save(*args, **kwargs)
