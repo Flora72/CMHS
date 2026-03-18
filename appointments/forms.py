@@ -1,6 +1,7 @@
 from django import forms
 from .models import Appointment, SessionLog
 from django.contrib.auth import get_user_model
+from django.utils import timezone
 
 User = get_user_model()
 
@@ -21,6 +22,9 @@ class BookingForm(forms.ModelForm):
 
         # Filter: Only show users who are marked as 'therapist'
         self.fields['therapist'].queryset = User.objects.filter(role='therapist')
+
+        today = timezone.now().date().strftime('%Y-%m-%d')
+        self.fields['date'].widget.attrs['min'] = today
 
         # Label Formatting: Show "Dr. Lastname" if available, otherwise show Username
         self.fields['therapist'].label_from_instance = lambda obj: (
