@@ -18,6 +18,8 @@ urlpatterns = [
     path('api/get-messages/<int:partner_id>/', views.get_chat_messages, name='get_chat_messages'),
     path('api/send-message/', views.send_chat_message, name='send_chat_message'),
     path('journal/', views.journal_view, name='journal'),
+    path('journal/edit/<int:pk>/', views.edit_journal, name='edit_journal'),
+    path('journal/delete/<int:pk>/', views.delete_journal, name='delete_journal'),
     path('ussd-demo/', views.ussd_simulator, name='ussd_simulator'),
     path('ussd-callback/', views.ussd_callback, name='ussd_callback'),
 ]
