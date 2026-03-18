@@ -42,7 +42,7 @@ def initiate_payment(request):
         )
 
 
-        callback_url = "https://cmhs-app.onrender.com/appointments/mpesa_callback/"
+        callback_url = "https://cmhs.onrender.com/appointments/ussd-callback/"
         res = lipa_na_mpesa_online(formatted_phone, 1500, callback_url)
 
         if res.get('ResponseCode') == '0':
