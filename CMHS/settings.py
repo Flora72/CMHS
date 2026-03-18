@@ -190,9 +190,11 @@ JAZZMIN_SETTINGS = {
         ],
     },
 
+    "custom_js": "admin/js/tab_fix.js",
     "use_google_fonts": True,
     "show_ui_builder": False,
     "theme": "flatly",
+    "changeform_format": "horizontal_tabs",
 }
 
 JAZZMIN_UI_TUNER = {
