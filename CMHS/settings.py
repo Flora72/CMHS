@@ -154,6 +154,7 @@ JAZZMIN_SETTINGS = {
     "site_title": "Admin Dashboard",
     "site_header": "Chiromo MHS",
     "site_brand": "Online CMHS",
+    "site_icon": "images/chiromo_logo.png",
 
     # LOGO
     "site_logo": "images/chiromo_logo.png",
