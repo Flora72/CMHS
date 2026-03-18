@@ -7,7 +7,7 @@
 
     {% include 'includes/therapist_sidebar.html' %}
 
-     <main class="flex-1 overflow-y-auto bg-gray-50 p-4 md:p-8 w-full flex flex-col mt-16 md:mt-0">
+    <main class="flex-1 overflow-y-auto bg-gray-50 p-4 md:p-8 w-full flex flex-col mt-16 md:mt-0">
 
         <div class="flex flex-col md:flex-row justify-between items-start md:items-end mb-8 gap-4">
             <div>
@@ -22,11 +22,11 @@
         <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
             <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex items-center justify-between">
                 <div>
-                    <p class="text-xs font-bold text-gray-400 uppercase tracking-wider">Pending</p>
+                    <p class="text-xs font-bold text-gray-400 uppercase tracking-wider">Pending Requests</p>
                     <p class="text-3xl font-bold text-chiromo-navy mt-1">{{ pending_count }}</p>
                 </div>
                 <div class="w-12 h-12 rounded-full bg-orange-50 text-orange-500 flex items-center justify-center">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                    <i class="fas fa-clock text-xl"></i>
                 </div>
             </div>
             <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex items-center justify-between">
@@ -35,7 +35,7 @@
                     <p class="text-3xl font-bold text-chiromo-navy mt-1">{{ todays_count }}</p>
                 </div>
                 <div class="w-12 h-12 rounded-full bg-blue-50 text-blue-500 flex items-center justify-center">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                    <i class="fas fa-calendar-day text-xl"></i>
                 </div>
             </div>
             <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex items-center justify-between">
@@ -44,55 +44,62 @@
                     <p class="text-3xl font-bold text-chiromo-navy mt-1">{{ total_patients }}</p>
                 </div>
                 <div class="w-12 h-12 rounded-full bg-green-50 text-green-500 flex items-center justify-center">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
+                    <i class="fas fa-user-friends text-xl"></i>
                 </div>
             </div>
+        </div>
+
+        <h3 class="font-bold text-xl text-chiromo-navy mb-4 flex items-center gap-2">
+            <span class="w-3 h-3 bg-green-500 rounded-full animate-pulse"></span>
+            Today's Confirmed Sessions
+        </h3>
+
+        <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden mb-12">
+            {% if approved_sessions %}
+            <table class="w-full text-left border-collapse">
+                <thead class="bg-blue-50/50 text-gray-500 text-xs uppercase tracking-wider">
+                    <tr>
+                        <th class="px-6 py-4 font-bold">Patient</th>
+                        <th class="px-6 py-4 font-bold">Time</th>
+                        <th class="px-6 py-4 font-bold">Type</th>
+                        <th class="px-6 py-4 font-bold text-right">Action</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-100">
+                    {% for appt in approved_sessions %}
+                    <tr class="hover:bg-gray-50 transition">
+                        <td class="px-6 py-4 font-medium text-chiromo-navy">{{ appt.patient.get_full_name|default:appt.patient.username }}</td>
+                        <td class="px-6 py-4 text-gray-600 font-bold">{{ appt.time }}</td>
+                        <td class="px-6 py-4">
+                            {% if appt.mode == 'online' %}
+                                <span class="text-xs font-bold text-purple-600 bg-purple-50 px-2 py-1 rounded">Online</span>
+                            {% else %}
+                                <span class="text-xs font-bold text-blue-600 bg-blue-50 px-2 py-1 rounded">In-Person</span>
+                            {% endif %}
+                        </td>
+                        <td class="px-6 py-4 text-right">
+                            {% if appt.mode == 'online' %}
+                                <button onclick="launchMeeting('CMHS-Therapy-{{ appt.id }}-{{ appt.date|date:'Ymd' }}', '{{ appt.patient.get_full_name|addslashes }}')"
+                                        class="inline-flex items-center gap-2 px-4 py-2 bg-chiromo-navy text-white text-xs font-bold rounded-lg hover:bg-blue-900 transition shadow-md">
+                                    <i class="fas fa-video"></i> Launch Session
+                                </button>
+                            {% else %}
+                                <span class="text-xs text-gray-400 italic">Facility Visit</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+            <div class="p-8 text-center text-gray-500">
+                <p>No confirmed sessions for today.</p>
+            </div>
+            {% endif %}
         </div>
 
         <h3 class="font-bold text-xl text-chiromo-navy mb-4">Pending Requests</h3>
-
-        <div class="md:hidden space-y-4 pb-20">
-            {% for appt in pending_requests %}
-            <div class="bg-white p-5 rounded-xl shadow-sm border border-gray-200">
-                <div class="flex justify-between items-start mb-3">
-                    <div>
-                        <h4 class="font-bold text-chiromo-navy text-lg">{{ appt.patient.first_name }} {{ appt.patient.last_name }}</h4>
-                        <p class="text-xs text-gray-400">@{{ appt.patient.username }}</p>
-                    </div>
-                    {% if appt.mode == 'online' %}
-                        <span class="px-2 py-1 rounded-lg text-xs font-bold bg-purple-100 text-purple-700">Online</span>
-                    {% else %}
-                        <span class="px-2 py-1 rounded-lg text-xs font-bold bg-blue-100 text-blue-700">In-Person</span>
-                    {% endif %}
-                </div>
-
-                <div class="text-sm text-gray-600 mb-4 space-y-1">
-                    <p><span class="font-bold">Date:</span> {{ appt.date }}</p>
-                    <p><span class="font-bold">Time:</span> {{ appt.time }}</p>
-                    {% if appt.notes %}
-                        <div class="mt-2 bg-gray-50 p-2 rounded text-xs italic text-gray-500 border border-gray-100">
-                            "{{ appt.notes|truncatechars:50 }}"
-                        </div>
-                    {% endif %}
-                </div>
-
-                <div class="grid grid-cols-2 gap-3">
-                    <a href="{% url 'approve_appointment' appt.id %}" class="flex items-center justify-center bg-green-500 text-white py-3 rounded-lg font-bold text-sm shadow-sm hover:bg-green-600">
-                        Approve
-                    </a>
-                    <a href="{% url 'decline_appointment' appt.id %}" onclick="return confirm('Decline this request?');" class="flex items-center justify-center bg-red-50 text-red-500 border border-red-100 py-3 rounded-lg font-bold text-sm hover:bg-red-100">
-                        Decline
-                    </a>
-                </div>
-            </div>
-            {% empty %}
-            <div class="text-center py-10 text-gray-500 bg-white rounded-xl border border-dashed">
-                <p>No pending requests.</p>
-            </div>
-            {% endfor %}
-        </div>
-
-        <div class="hidden md:block bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+        <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
             {% if pending_requests %}
             <table class="w-full text-left border-collapse">
                 <thead class="bg-gray-50 text-gray-500 text-xs uppercase tracking-wider">
@@ -100,50 +107,94 @@
                         <th class="px-6 py-4 font-bold">Patient</th>
                         <th class="px-6 py-4 font-bold">Date & Time</th>
                         <th class="px-6 py-4 font-bold">Mode</th>
-                        <th class="px-6 py-4 font-bold">Notes</th>
-                        <th class="px-6 py-4 font-bold text-right">Actions</th>
+                        <th class="px-6 py-4 text-right font-bold">Actions</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-gray-100">
                     {% for appt in pending_requests %}
                     <tr class="hover:bg-blue-50/30 transition">
                         <td class="px-6 py-4 font-medium text-chiromo-navy">
-                            {{ appt.patient.first_name }} {{ appt.patient.last_name }}
-                            <div class="text-xs text-gray-400">@{{ appt.patient.username }}</div>
+                            {{ appt.patient.get_full_name|default:appt.patient.username }}
                         </td>
-                        <td class="px-6 py-4 text-gray-600">
+                        <td class="px-6 py-4 text-gray-600 text-sm">
                             {{ appt.date }} <br>
-                            <span class="text-xs font-bold bg-gray-100 px-2 py-1 rounded">{{ appt.time }}</span>
+                            <span class="font-bold text-gray-800">{{ appt.time }}</span>
                         </td>
                         <td class="px-6 py-4">
-                            {% if appt.mode == 'online' %}
-                                <span class="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-bold bg-purple-100 text-purple-700">Online</span>
-                            {% else %}
-                                <span class="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-bold bg-blue-100 text-blue-700">In-Person</span>
-                            {% endif %}
-                        </td>
-                        <td class="px-6 py-4 text-sm text-gray-500 italic max-w-xs truncate">
-                            "{{ appt.notes|default:'No notes' }}"
+                            <span class="text-xs font-bold {% if appt.mode == 'online' %}text-purple-600{% else %}text-blue-600{% endif %}">
+                                {{ appt.mode|capfirst }}
+                            </span>
                         </td>
                         <td class="px-6 py-4 text-right space-x-2">
-                            <a href="{% url 'approve_appointment' appt.id %}" class="px-4 py-1.5 bg-green-500 text-white text-xs font-bold rounded hover:bg-green-600 transition inline-block shadow-sm">
-                                Approve
-                            </a>
-                            <a href="{% url 'decline_appointment' appt.id %}" onclick="return confirm('Are you sure?');" class="px-4 py-1.5 bg-red-50 text-red-500 border border-red-100 text-xs font-bold rounded hover:bg-red-100 transition inline-block">
-                                Decline
-                            </a>
+                            <a href="{% url 'approve_appointment' appt.id %}" class="px-3 py-1 bg-green-500 text-white text-xs font-bold rounded hover:bg-green-600 transition inline-block">Approve</a>
+                            <a href="{% url 'decline_appointment' appt.id %}" onclick="return confirm('Decline this request?');" class="px-3 py-1 bg-red-50 text-red-500 border border-red-100 text-xs font-bold rounded hover:bg-red-100 transition inline-block">Decline</a>
                         </td>
                     </tr>
                     {% endfor %}
                 </tbody>
             </table>
             {% else %}
-            <div class="p-12 text-center text-gray-500">
+            <div class="p-8 text-center text-gray-500">
                 <p>No pending requests at the moment.</p>
             </div>
             {% endif %}
         </div>
-
     </main>
 </div>
+
+<div id="jitsi-modal" class="fixed inset-0 z-[100] hidden bg-black flex flex-col">
+    <div class="bg-chiromo-navy p-4 flex justify-between items-center text-white">
+        <span id="session-title" class="font-bold uppercase tracking-widest text-sm">Live Clinical Session</span>
+        <button onclick="closeMeeting()" class="bg-red-600 hover:bg-red-700 text-white px-4 py-1 rounded text-xs font-bold">
+            End & Close Session
+        </button>
+    </div>
+    <div id="jitsi-container" class="flex-1 w-full bg-gray-900"></div>
+</div>
+
+<script src="https://meet.jit.si/external_api.js"></script>
+<script>
+    let jitsiApi = null;
+
+    function launchMeeting(roomName, patientName) {
+        document.getElementById('jitsi-modal').classList.remove('hidden');
+        document.getElementById('session-title').innerText = "Session with " + patientName;
+
+        const domain = 'meet.jit.si';
+        const options = {
+            roomName: roomName,
+            width: '100%',
+            height: '100%',
+            parentNode: document.querySelector('#jitsi-container'),
+            userInfo: {
+                displayName: 'Dr. {{ user.last_name|addslashes }}'
+            },
+            configOverwrite: {
+                prejoinPageEnabled: false,
+                startWithAudioMuted: false,
+                startWithVideoMuted: false,
+                disableDeepLinking: true
+            },
+            interfaceConfigOverwrite: {
+                TOOLBAR_BUTTONS: [
+                    'microphone', 'camera', 'closedcaptions', 'desktop', 'fullscreen',
+                    'fhangup', 'profile', 'chat', 'settings', 'raisehand',
+                    'videoquality', 'filmstrip', 'tileview', 'security'
+                ],
+            }
+        };
+
+        // Initialize the Iframe
+        jitsiApi = new JitsiMeetExternalAPI(domain, options);
+    }
+
+    function closeMeeting() {
+        if (jitsiApi) {
+            jitsiApi.dispose();
+            jitsiApi = null;
+        }
+        document.getElementById('jitsi-modal').classList.add('hidden');
+        document.getElementById('jitsi-container').innerHTML = ""; // Clear for next session
+    }
+</script>
 {% endblock %}
