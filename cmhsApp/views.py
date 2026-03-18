@@ -4,14 +4,6 @@ from django.shortcuts import render
 # General views
 def index(request):
     return render(request,'index.html')
-
-def about(request):
-    return render(request,'about.html')
-
-def contact(request):
-    return render(request,'contact.html')
-
-# auth related views
 def login(request):
     return render(request, 'accounts/login.html')
 

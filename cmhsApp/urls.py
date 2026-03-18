@@ -3,8 +3,6 @@ from django.urls import path
 from django.contrib.auth import views as auth_views
 urlpatterns = [
     path('', views.index, name='index'),
-    path('', views.about, name='about'),
-    path('', views.contact, name='contact'),
     path('', views.login, name='login'),
     path('', views.signup, name='signup'),
     path('', views.patient_dashboard, name='patient_dashboard'),
