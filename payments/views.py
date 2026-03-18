@@ -29,11 +29,11 @@ def initiate_payment(request):
             messages.error(request, "Please enter a phone number.")
             return redirect('pricing_page')
 
-        # 1. Format for Africa's Talking / M-Pesa (+254...)
+
         formatted_phone = '+254' + phone[1:] if phone.startswith('0') else '+' + phone if phone.startswith(
             '254') else phone
 
-        # 2. Create the Transaction record
+
         transaction = Transaction.objects.create(
             user=user,
             phone_number=formatted_phone,
@@ -41,20 +41,19 @@ def initiate_payment(request):
             status='pending'
         )
 
-        # 3. Trigger M-Pesa STK Push
-        # FIX: Point this to mpesa-callback, NOT ussd-callback
-        callback_url = "https://alline-hirtellous-dario.ngrok-free.dev/appointments/mpesa-callback/"
+
+        callback_url = "https://cmhs-app.onrender.com/appointments/mpesa_callback/"
         res = lipa_na_mpesa_online(formatted_phone, 1500, callback_url)
 
         if res.get('ResponseCode') == '0':
             transaction.checkout_request_id = res['CheckoutRequestID']
-            transaction.status = 'completed'  # Instant activation for your demo
+            transaction.status = 'completed'
             transaction.save()
 
             user.is_premium = True
             user.save()
 
-            # --- RESTORED: SEND EMAIL ---
+
             subject = "Payment Confirmed - CMHS Premium Access"
             email_message = (
                 f"Dear {user.first_name},\n\n"
@@ -64,7 +63,7 @@ def initiate_payment(request):
             )
             send_mail(subject, email_message, "perpymari@gmail.com", [user.email])
 
-            # --- RESTORED: SEND SMS (2-argument fix) ---
+
             sms_text = f"Hello {user.first_name}, your KES 1,500 payment to CMHS is confirmed. Transaction: {transaction.checkout_request_id}."
             send_ussd_sms(formatted_phone, sms_text)
 
