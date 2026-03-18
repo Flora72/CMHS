@@ -43,11 +43,20 @@ def dashboard(request):
     user = request.user
     today = timezone.now().date()
 
+    # This pulls today's online confirmed sessions for the Join Card
+    upcoming_appointments = Appointment.objects.filter(
+        patient=user,
+        status='Confirmed',
+        date=today,
+        mode='online'
+    )
+
     # Check if mood logged today
     todays_mood = MoodEntry.objects.filter(patient=user, created_at=today).first()
     unread_count = Message.objects.filter(recipient=user, is_read=False).count()
 
     context = {
+        'upcoming_appointments': upcoming_appointments,
         'todays_mood': todays_mood,
         'unread_count': unread_count,
     }
@@ -65,14 +74,18 @@ def therapist_dashboard(request):
         status='pending'
     ).order_by('date', 'time')
 
-    # 3. Calculate the counts
-    pending_count = pending_requests.count()
-
-    todays_count = Appointment.objects.filter(
+    # NEW: Fetch Approved Sessions for Today so the link shows up!
+    approved_sessions = Appointment.objects.filter(
         therapist=request.user,
         date=date.today(),
         status='confirmed'
-    ).count()
+    ).order_by('time')
+
+    # 3. Calculate the counts
+    pending_count = pending_requests.count()
+
+    # Update this to count the approved sessions we just fetched
+    todays_count = approved_sessions.count()
 
     # Count distinct patients assigned to this therapist
     total_patients = Appointment.objects.filter(
@@ -82,6 +95,7 @@ def therapist_dashboard(request):
     # 4. specific context dictionary
     context = {
         'pending_requests': pending_requests,
+        'approved_sessions': approved_sessions,
         'pending_count': pending_count,
         'todays_count': todays_count,
         'total_patients': total_patients,
