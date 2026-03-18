@@ -145,45 +145,50 @@ def calendar_view(request):
 
 @login_required
 @premium_required
+@login_required
+@premium_required
 def book_appointment(request):
     if request.method == 'POST':
         form = BookingForm(request.POST)
         if form.is_valid():
             appointment = form.save(commit=False)
             appointment.patient = request.user
-
-            # --- VIRTUAL LINK LOGIC ---
-            # If the session type is virtual, generate a unique link
-            # Assumes your model has a session_type field (Virtual/In-Person)
-            if appointment.mode == 'online':
-                # Creating a unique Jitsi link for the session
-                meeting_id = str(uuid.uuid4())[:8]
-                appointment.meeting_link = f"https://meet.jit.si/CMHS-{meeting_id}"
-            else:
-                appointment.meeting_link = ""
-
             appointment.save()
 
-            # Updated email notification with the live link
+            # Generate the Formula Link
+            if appointment.mode == 'online':
+                date_str = appointment.date.strftime('%Y%m%d')
+                appointment.meeting_link = f"https://8x8.vc/vpaas-magic-cookie-chiromo-demo/CMHS-Therapy-{appointment.id}-{date_str}"
+                appointment.save()
+
+            # Single Email Notification Logic
             subject = 'Appointment Confirmed - Chiromo Hospital'
+            meeting_info = appointment.meeting_link if appointment.mode == 'online' else 'Physical Session at Branch'
+
             message = f"""
-            Dear {request.user.first_name},
-            Your appointment has been successfully booked.
+Dear {request.user.first_name},
+Your appointment has been successfully booked.
 
-            Therapist: {appointment.therapist.username}
-            Date: {appointment.date}
-            Time: {appointment.time}
-            Session Type: {appointment.mode}
-            Meeting Link: {appointment.meeting_link if appointment.meeting_link else 'Physical Session at Branch'}
+Therapist: {appointment.therapist.username}
+Date: {appointment.date}
+Time: {appointment.time}
+Session Type: {appointment.mode}
+Meeting Link: {meeting_info}
 
-            Recovery in Dignity.
+Recovery in Dignity.
             """
-            from_email = 'noreply@chiromo.com'
-            recipient_list = [request.user.email]
-            send_mail(subject, message, from_email, recipient_list, fail_silently=True)
+
+            send_mail(
+                subject,
+                message,
+                'noreply@chiromo.com',
+                [request.user.email],
+                fail_silently=True
+            )
 
             messages.success(request, 'Your session has been booked successfully! Check your email.')
             return redirect('dashboard')
+
     else:
         form = BookingForm()
 
@@ -315,46 +320,34 @@ def log_mood(request, mood_value):
 @login_required
 @premium_required
 def inbox(request, id=None):
-    # 1. DETERMINE ACTIVE CHAT PARTNER
+    user = request.user
     chat_partner = None
     if id:
         chat_partner = get_object_or_404(User, id=id)
 
-    # 2. SEND MESSAGE
-    if request.method == 'POST' and chat_partner:
-        body = request.POST.get('body')
-        if body:
-            Message.objects.create(
-                sender=request.user,
-                recipient=chat_partner,
-                body=body
-            )
-            return redirect('inbox_with_id', id=chat_partner.id)
+    # 1. GET RECENT CONTACTS (Sidebar)
+    sent_ids = Message.objects.filter(sender=user).values_list('recipient', flat=True)
+    received_ids = Message.objects.filter(recipient=user).values_list('sender', flat=True)
+    contact_ids = set(list(sent_ids) + list(received_ids))
+    recent_contacts = User.objects.filter(id__in=contact_ids).exclude(id=user.id)
 
-    # 3. GET MESSAGES FOR ACTIVE CHAT
-    messages_list = []
-    if chat_partner:
-        messages_list = Message.objects.filter(
-            Q(sender=request.user, recipient=chat_partner) |
-            Q(sender=chat_partner, recipient=request.user)
-        ).order_by('timestamp')
-        Message.objects.filter(recipient=request.user, sender=chat_partner, is_read=False).update(is_read=True)
-
-    # --- NEW PART: FETCH RECENT CONTACTS FOR SIDEBAR ---
-    # Get all unique users involved in messages with me
-    sent_messages = Message.objects.filter(sender=request.user).values_list('recipient', flat=True)
-    received_messages = Message.objects.filter(recipient=request.user).values_list('sender', flat=True)
-
-    # Combine IDs and remove duplicates
-    contact_ids = set(list(sent_messages) + list(received_messages))
-
-    # Fetch User objects (exclude self just in case)
-    recent_contacts = User.objects.filter(id__in=contact_ids).exclude(id=request.user.id)
+    # 2. FIXED: GET ELIGIBLE CONTACTS
+    # Using 'therapist_appointments' and 'patient_appointments' as seen in your error choices
+    if user.role == 'therapist':
+        # Therapist sees patients who have booked with them
+        my_contacts = User.objects.filter(
+            patient_appointments__therapist=user
+        ).distinct()
+    else:
+        # Patient sees therapists they have booked with
+        my_contacts = User.objects.filter(
+            therapist_appointments__patient=user
+        ).distinct()
 
     return render(request, 'appointments/inbox.html', {
-        'messages_list': messages_list,
         'chat_partner': chat_partner,
-        'recent_contacts': recent_contacts,  # <--- Pass this to template
+        'recent_contacts': recent_contacts,
+        'my_contacts': my_contacts,
     })
 @login_required
 def get_chat_messages(request, partner_id):
@@ -435,7 +428,6 @@ def cancel_appointment(request, id):
     return redirect('patient_appointments')
 def assessment_hub(request):
     return render(request, 'appointments/assessment_hub.html')
-
 
 def take_assessment(request):
     # Get the disorder type from the URL, default to 'general'
@@ -543,6 +535,23 @@ def journal_view(request):
     entries = JournalEntry.objects.filter(patient=request.user).order_by('-created_at')
     return render(request, 'appointments/journal.html', {'entries': entries})
 
+@login_required
+def delete_journal(request, pk):
+    entry = get_object_or_404(JournalEntry, pk=pk, patient=request.user)
+    entry.delete()
+    messages.success(request, "Entry deleted.")
+    return redirect('journal')
+
+@login_required
+def edit_journal(request, pk):
+    entry = get_object_or_404(JournalEntry, pk=pk, patient=request.user)
+    if request.method == 'POST':
+        entry.title = request.POST.get('title')
+        entry.content = request.POST.get('content')
+        entry.mood_rating = request.POST.get('mood')
+        entry.save()
+        return redirect('journal')
+    return render(request, 'appointments/edit_journal.html', {'entry': entry})
 @csrf_exempt
 def ussd_callback(request):
     if request.method == 'POST':
