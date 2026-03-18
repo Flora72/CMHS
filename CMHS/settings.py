@@ -1,5 +1,6 @@
 from pathlib import Path
 import os
+import dj_database_url
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -14,7 +15,7 @@ SECRET_KEY = 'django-insecure-zu_@phyfzk+vi&xu&v26k9*zefpv!hy%j$!%gz^&l-dgnc1c6!
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = False
 
-ALLOWED_HOSTS = ['*', 'alline-hirtellous-dario.ngrok-free.dev']
+ALLOWED_HOSTS = ['*', 'cmhs.onrender.com', 'alline-hirtellous-dario.ngrok-free.dev']
 
 # Application definition
 
@@ -74,15 +75,22 @@ WSGI_APPLICATION = 'CMHS.wsgi.application'
 #     }
 # }
 
+# DATABASES = {
+#     'default' : {
+#         'ENGINE': 'django.db.backends.postgresql',
+#         'NAME': 'cmhs_db',
+#         'USER': 'postgres',
+#         'PASSWORD': '1234',
+#         'HOST': 'localhost',
+#         'PORT': '5432',
+#     }
+# }
+
 DATABASES = {
-    'default' : {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'cmhs_db',
-        'USER': 'postgres',
-        'PASSWORD': '1234',
-        'HOST': 'localhost',
-        'PORT': '5432',
-    }
+    'default': dj_database_url.config(
+        default='postgresql://admin:7keu8lM4nOTjKw9T76FNe1o2WPiIrwBU@dpg-d6tgmu450q8c73ffl000-a.oregon-postgres.render.com/cmhs_db',
+        conn_max_age=600
+    )
 }
 # Password validation
 # https://docs.djangoproject.com/en/6.0/ref/settings/#auth-password-validators
