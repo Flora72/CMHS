@@ -12,7 +12,6 @@ class Appointment(models.Model):
         ('cancelled', 'Cancelled'),
     ]
 
-    # This is the field causing the error!
     MODE_CHOICES = [
         ('online', 'Online (Video Call)'),
         ('physical', 'In-Person (Westlands Center)'),
@@ -26,7 +25,7 @@ class Appointment(models.Model):
     date = models.DateField()
     time = models.TimeField()
 
-    # Ensure this line exists:
+
     mode = models.CharField(max_length=10, choices=MODE_CHOICES, default='online')
 
     status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='pending')
@@ -106,7 +105,6 @@ class AssessmentResult(models.Model):
         ('severe', 'Severe'),
     ]
 
-    # NEW FIELD: Which test was this?
     TEST_TYPES = [
         ('depression', 'Depression (PHQ-9)'),
         ('anxiety', 'Anxiety (GAD-7)'),
@@ -115,7 +113,7 @@ class AssessmentResult(models.Model):
     ]
 
     patient = models.ForeignKey(User, on_delete=models.CASCADE, related_name='assessments', null=True, blank=True)
-    test_type = models.CharField(max_length=20, choices=TEST_TYPES, default='depression')  # <--- New Field
+    test_type = models.CharField(max_length=20, choices=TEST_TYPES, default='depression')
     score = models.IntegerField()
     severity = models.CharField(max_length=20, choices=SEVERITY_CHOICES)
     date_taken = models.DateTimeField(auto_now_add=True)

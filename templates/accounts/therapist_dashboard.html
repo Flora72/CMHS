@@ -184,7 +184,7 @@
             }
         };
 
-        // Initialize the Iframe
+        // Iframe
         jitsiApi = new JitsiMeetExternalAPI(domain, options);
     }
 
@@ -194,7 +194,7 @@
             jitsiApi = null;
         }
         document.getElementById('jitsi-modal').classList.add('hidden');
-        document.getElementById('jitsi-container').innerHTML = ""; // Clear for next session
+        document.getElementById('jitsi-container').innerHTML = "";
     }
 </script>
 {% endblock %}

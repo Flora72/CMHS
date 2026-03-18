@@ -85,23 +85,21 @@
 
 <script>
     function selectTherapist(therapistId) {
-        // 1. Update the hidden dropdown value
         const select = document.querySelector('select[name="therapist"]');
         select.value = therapistId;
 
-        // 2. Visual Feedback: Reset all cards to gray
         document.querySelectorAll('.therapist-card').forEach(card => {
             card.classList.remove('border-chiromo-gold', 'bg-yellow-50');
             card.classList.add('border-gray-100', 'bg-white');
 
-            // Reset button text
+            // Reset button
             const btn = card.querySelector('button');
             btn.innerText = "Select";
             btn.classList.remove('bg-chiromo-navy', 'text-white');
             btn.classList.add('bg-gray-100', 'text-chiromo-navy');
         });
 
-        // 3. Highlight the selected card
+
         const selectedCard = document.getElementById('card-' + therapistId);
         selectedCard.classList.remove('border-gray-100', 'bg-white');
         selectedCard.classList.add('border-chiromo-gold', 'bg-yellow-50');

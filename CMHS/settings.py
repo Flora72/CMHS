@@ -141,12 +141,12 @@ MPESA_PASSKEY = 'bfb279f9aa9bdbcf158e97dd71a467cd2e0c893059b10f78e6b72ada1ed2c91
 MPESA_INITIATOR_PASSWORD = 'YOUR_INITIATOR_PASSWORD'
 
 JAZZMIN_SETTINGS = {
-    # --- Site Identity ---
+
     "site_title": "Admin Dashboard",
     "site_header": "Chiromo MHS",
     "site_brand": "Online CMHS",
 
-    # Official Logo from Web
+    # LOGO
     "site_logo": "images/chiromo_logo.png",
     "login_logo": "images/chiromo_logo.png",
     "site_logo_classes": "img-fluid",
@@ -155,14 +155,14 @@ JAZZMIN_SETTINGS = {
     "copyright": "Chiromo Hospital Group © 2026",
     "search_model": ["accounts.User", "appointments.Appointment", "payments.Transaction"],
 
-    # --- TOP NAVBAR ---
+    # TOP NAVBAR
     "topmenu_links": [
         {"name": "Home", "url": "admin:index", "permissions": ["auth.view_user"]},
         {"name": "View Site", "url": "/", "new_window": True},
         {"name": "Sign Out", "url": "#logout", "icon": "fas fa-sign-out-alt"},
     ],
 
-    # --- SIDEBAR CONFIGURATION ---
+    # SIDEBAR
     "show_sidebar": True,
     "navigation_expanded": True,
     "order_with_respect_to": ["accounts", "appointments", "payments"],
@@ -178,7 +178,7 @@ JAZZMIN_SETTINGS = {
         "payments.transaction": "fas fa-file-invoice-dollar",
     },
 
-    # --- SIDEBAR PDF LINK ---
+    # SIDEBAR PDF LINK
     "custom_links": {
         "appointments": [
             {

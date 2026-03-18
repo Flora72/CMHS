@@ -6,7 +6,6 @@ from appointments.views import export_appointments_pdf, preview_appointments_rep
 
 urlpatterns = [
 
-    # PDF and Preview Routes
     path('admin/reports/appointments/preview/', preview_appointments_report, name='preview_appointments_report'),
     path('admin/reports/payments/preview/', preview_payments_report, name='preview_payments_report'),
     path('admin/reports/appointments/download/', export_appointments_pdf, name='export_appointments_pdf'),

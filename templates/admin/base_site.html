@@ -3,7 +3,6 @@
 {% block extrahead %}
 {{ block.super }}
 <style>
-    /* Global Navy and Gold Branding */
     .main-header { background-color: #AC8341 !important; }
     .main-sidebar { background-color: #00183E !important; }
     .brand-link { background-color: #00183E !important; border-bottom: 1px solid rgba(255,255,255,0.1) !important; }
@@ -20,7 +19,6 @@
 
 <script>
 document.addEventListener("DOMContentLoaded", function() {
-    // This intercepts the Navbar link we set in JAZZMIN_SETTINGS
     const logoutLinks = document.querySelectorAll('a[href*="logout"]');
     logoutLinks.forEach(link => {
         link.addEventListener("click", function(e) {

@@ -20,13 +20,13 @@ class BookingForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super(BookingForm, self).__init__(*args, **kwargs)
 
-        # Filter: Only show users who are marked as 'therapist'
+        # Only shows users who are marked as 'therapist'
         self.fields['therapist'].queryset = User.objects.filter(role='therapist')
 
         today = timezone.now().date().strftime('%Y-%m-%d')
         self.fields['date'].widget.attrs['min'] = today
 
-        # Label Formatting: Show "Dr. Lastname" if available, otherwise show Username
+        #  Shows "Dr. Lastname" if available, otherwise shows Username
         self.fields['therapist'].label_from_instance = lambda obj: (
             f"Dr. {obj.last_name} {obj.first_name}" if obj.last_name and obj.first_name
             else f"Dr. {obj.username}"

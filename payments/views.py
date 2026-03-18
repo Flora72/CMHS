@@ -15,7 +15,6 @@ from .sms_service import send_ussd_sms
 def pricing_page(request):
     return render(request, 'payments/pricing.html')
 
-
 @login_required
 def payment_success(request):
     return render(request, 'payments/success.html')

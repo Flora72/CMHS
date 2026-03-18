@@ -41,7 +41,6 @@ def preview_appointments_report(request):
         'export_url': 'export_appointments_pdf'
     })
 
-
 def preview_payments_report(request):
     data = Transaction.objects.filter(status='completed').order_by('-timestamp')
     return render(request, 'admin/report_preview.html', {
@@ -52,7 +51,6 @@ def preview_payments_report(request):
     })
 
 
-# --- PDF GENERATION ENGINE ---
 def generate_pdf(filename, title, headers, data):
     response = HttpResponse(content_type='application/pdf')
     response['Content-Disposition'] = f'attachment; filename="{filename}.pdf"'
@@ -68,7 +66,7 @@ def generate_pdf(filename, title, headers, data):
     table_data = [headers] + data
     table = Table(table_data, hAlign='LEFT')
     table.setStyle(TableStyle([
-        ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor("#00183E")),  # Navy
+        ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor("#00183E")),
         ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
         ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
         ('GRID', (0, 0), (-1, -1), 1, colors.grey),
@@ -78,13 +76,11 @@ def generate_pdf(filename, title, headers, data):
     doc.build(elements)
     return response
 
-
 def export_appointments_pdf(request):
     apps = Appointment.objects.all()
     data = [[a.patient.username, a.therapist.username, a.date.strftime('%Y-%m-%d'), a.status] for a in apps]
     return generate_pdf("Clinical_Report", "Clinical Appointment Summary", ['Patient', 'Therapist', 'Date', 'Status'],
                         data)
-
 
 def export_payments_pdf(request):
     trans = Transaction.objects.filter(status='completed')
@@ -92,7 +88,8 @@ def export_payments_pdf(request):
     return generate_pdf("Financial_Report", "Financial Transaction Summary", ['Transaction ID', 'Amount', 'Date'], data)
 
 # ---------------------------------------------
-# CLIENT SIDE VIEWS
+#   CLIENT SIDE VIEWS
+#   APPOINTMENT VIEWS
 # ---------------------------------------------
 @login_required
 def calendar_view(request):
@@ -145,8 +142,6 @@ def calendar_view(request):
 
 @login_required
 @premium_required
-@login_required
-@premium_required
 def book_appointment(request):
     if request.method == 'POST':
         form = BookingForm(request.POST)
@@ -155,13 +150,13 @@ def book_appointment(request):
             appointment.patient = request.user
             appointment.save()
 
-            # Generate the Formula Link
+            # Generate  Link
             if appointment.mode == 'online':
                 date_str = appointment.date.strftime('%Y%m%d')
                 appointment.meeting_link = f"https://8x8.vc/vpaas-magic-cookie-chiromo-demo/CMHS-Therapy-{appointment.id}-{date_str}"
                 appointment.save()
 
-            # Single Email Notification Logic
+            # Email Notification Logic
             subject = 'Appointment Confirmed - Chiromo Hospital'
             meeting_info = appointment.meeting_link if appointment.mode == 'online' else 'Physical Session at Branch'
 
@@ -198,6 +193,7 @@ Recovery in Dignity.
         'therapists': therapists
     }
     return render(request, 'appointments/book_appointment.html', context)
+
 @login_required
 def log_session(request, appointment_id):
     appointment = get_object_or_404(Appointment, id=appointment_id)
@@ -205,19 +201,19 @@ def log_session(request, appointment_id):
         messages.error(request, "You are not authorized to log this session.")
         return redirect('therapist_dashboard')
 
-    # 3. Handle Form Submission
+     # Form Submission
     if request.method == 'POST':
-        form = SessionLogForm(request.POST, request.FILES)  # <--- FILES is important for uploads!
+        form = SessionLogForm(request.POST, request.FILES)
         if form.is_valid():
             session_log = form.save(commit=False)
 
-            # Link everything together
+
             session_log.appointment = appointment
             session_log.therapist = request.user
             session_log.patient = appointment.patient
             session_log.save()
 
-            # 4. Mark Appointment as Completed
+            # Mark Appointment as Completed
             appointment.status = 'completed'
             appointment.save()
 
@@ -230,16 +226,17 @@ def log_session(request, appointment_id):
         'form': form,
         'appointment': appointment
     })
+
 @login_required
 @premium_required
 def patient_resources(request):
-    # 1. Get Private Resources (Your existing logic)
-    # We use SessionLog because that is your actual database model
+
+
     resources = SessionLog.objects.filter(
         patient=request.user
     ).exclude(resources='').order_by('-session_date')
 
-    # 2. Define Public Resources (New Static Data)
+    # Public Resources
     public_resources = [
         {
             'category': 'General Mental Health',
@@ -296,17 +293,17 @@ def patient_resources(request):
         'public_resources': public_resources,
     }
 
-    # Make sure this matches the template file name you are editing
     return render(request, 'appointments/patient_resources.html', context)
+
 @login_required
 def patient_appointments(request):
     # all appointments for the patients are fetched
     appointments = Appointment.objects.filter(patient=request.user).order_by('-date', '-time')
 
     return render(request, 'appointments/patient_appointments.html', {'appointments': appointments})
+
 @login_required
 def log_mood(request, mood_value):
-    # Check if they already logged today
     today = timezone.now().date()
     existing_entry = MoodEntry.objects.filter(patient=request.user, created_at=today).exists()
 
@@ -317,6 +314,24 @@ def log_mood(request, mood_value):
         messages.info(request, "You have already logged your mood for today.")
 
     return redirect('dashboard')
+
+@login_required
+def cancel_appointment(request, id):
+
+    appointment = get_object_or_404(Appointment, id=id, patient=request.user)
+
+    if appointment.status == 'pending':
+        appointment.status = 'cancelled'
+        appointment.save()
+        messages.success(request, "Appointment cancelled successfully.")
+    else:
+        messages.error(request, "You can only cancel pending appointments.")
+
+    return redirect('patient_appointments')
+
+# ---------------------------------------------
+# MESSAGES VIEWS
+# ---------------------------------------------
 @login_required
 @premium_required
 def inbox(request, id=None):
@@ -325,14 +340,14 @@ def inbox(request, id=None):
     if id:
         chat_partner = get_object_or_404(User, id=id)
 
-    # 1. GET RECENT CONTACTS (Sidebar)
+    # RECENT CONTACTS
     sent_ids = Message.objects.filter(sender=user).values_list('recipient', flat=True)
     received_ids = Message.objects.filter(recipient=user).values_list('sender', flat=True)
     contact_ids = set(list(sent_ids) + list(received_ids))
     recent_contacts = User.objects.filter(id__in=contact_ids).exclude(id=user.id)
 
-    # 2. FIXED: GET ELIGIBLE CONTACTS
-    # Using 'therapist_appointments' and 'patient_appointments' as seen in your error choices
+
+    # Using 'therapist_appointments' and 'patient_appointments'
     if user.role == 'therapist':
         # Therapist sees patients who have booked with them
         my_contacts = User.objects.filter(
@@ -349,6 +364,7 @@ def inbox(request, id=None):
         'recent_contacts': recent_contacts,
         'my_contacts': my_contacts,
     })
+
 @login_required
 def get_chat_messages(request, partner_id):
     partner = get_object_or_404(User, id=partner_id)
@@ -364,8 +380,6 @@ def get_chat_messages(request, partner_id):
 
     data = []
     for msg in messages:
-        # LOGIC: If I sent it, and it's not already deleted, I can edit/delete it.
-        # No time limits anymore.
         is_owner = (msg.sender == request.user)
         is_deleted = (msg.body == "This message was deleted")
 
@@ -374,18 +388,19 @@ def get_chat_messages(request, partner_id):
             'sender': 'me' if is_owner else 'partner',
             'body': msg.body,
             'timestamp': timezone.localtime(msg.timestamp).strftime("%H:%M"),
-            'can_edit': is_owner and not is_deleted,  # Always True for owner
-            'can_delete': is_owner and not is_deleted,  # Always True for owner
+            'can_edit': is_owner and not is_deleted,
+            'can_delete': is_owner and not is_deleted,
             'is_deleted': is_deleted
         })
 
     return JsonResponse({'messages': data})
+
 @login_required
 def delete_message(request, msg_id):
-    # Verify ownership ONLY
+    # Verify ownership
     message = get_object_or_404(Message, id=msg_id, sender=request.user)
 
-    # Soft Delete
+    # Delete
     message.body = "This message was deleted"
     message.save()
 
@@ -393,6 +408,7 @@ def delete_message(request, msg_id):
         return JsonResponse({'status': 'success'})
 
     return redirect('inbox_with_id', id=message.recipient.id)
+
 @login_required
 @csrf_exempt
 def edit_message(request, msg_id):
@@ -413,19 +429,30 @@ def edit_message(request, msg_id):
                 return JsonResponse({'status': 'success'})
 
     return redirect('inbox_with_id', id=message.recipient.id)
+
 @login_required
-def cancel_appointment(request, id):
+@csrf_exempt
+def send_chat_message(request):
+    if request.method == 'POST':
+        data = json.loads(request.body)
+        recipient_id = data.get('recipient_id')
+        body = data.get('body')
 
-    appointment = get_object_or_404(Appointment, id=id, patient=request.user)
+        recipient = get_object_or_404(User, id=recipient_id)
 
-    if appointment.status == 'pending':
-        appointment.status = 'cancelled'
-        appointment.save()
-        messages.success(request, "Appointment cancelled successfully.")
-    else:
-        messages.error(request, "You can only cancel pending appointments.")
+        Message.objects.create(
+            sender=request.user,
+            recipient=recipient,
+            body=body
+        )
+        return JsonResponse({'status': 'success'})
 
-    return redirect('patient_appointments')
+    return JsonResponse({'status': 'error'}, status=400)
+
+
+# ---------------------------------------------
+# GENERAL ASSESSMENT VIEWS
+# ---------------------------------------------
 def assessment_hub(request):
     return render(request, 'appointments/assessment_hub.html')
 
@@ -433,7 +460,7 @@ def take_assessment(request):
     # Get the disorder type from the URL, default to 'general'
     disorder_type = request.GET.get('type', 'general')
 
-    # Clinical Question Bank
+    # Clinical Questions
     assessment_data = {
         'general': {
             'title': 'General Mental Health Check-in',
@@ -489,8 +516,7 @@ def take_assessment(request):
     context = assessment_data.get(disorder_type, assessment_data['general'])
 
     if request.method == 'POST':
-        # Here you would calculate the score and redirect to results
-        # For now, we'll just simulate a result based on the type
+        #  calculate the score and redirect to results
         return render(request, 'appointments/public_result.html', {
             'result_title': f"Analysis for {context['title']}",
             'result_desc': "Your responses suggest a moderate level of symptoms. This screening is not a diagnosis, but an indicator that speaking with a professional could be beneficial.",
@@ -498,24 +524,10 @@ def take_assessment(request):
         })
 
     return render(request, 'appointments/take_assessment.html', context)
-@login_required
-@csrf_exempt
-def send_chat_message(request):
-    if request.method == 'POST':
-        data = json.loads(request.body)
-        recipient_id = data.get('recipient_id')
-        body = data.get('body')
 
-        recipient = get_object_or_404(User, id=recipient_id)
-
-        Message.objects.create(
-            sender=request.user,
-            recipient=recipient,
-            body=body
-        )
-        return JsonResponse({'status': 'success'})
-
-    return JsonResponse({'status': 'error'}, status=400)
+# ---------------------------------------------
+# JOURNAL RELATED VIEWS
+# ---------------------------------------------
 @login_required
 def journal_view(request):
     if request.method == 'POST':
@@ -552,6 +564,11 @@ def edit_journal(request, pk):
         entry.save()
         return redirect('journal')
     return render(request, 'appointments/edit_journal.html', {'entry': entry})
+
+
+# ---------------------------------------------
+# USSD RELATED VIEWS
+# ---------------------------------------------
 @csrf_exempt
 def ussd_callback(request):
     if request.method == 'POST':
@@ -624,7 +641,7 @@ def ussd_callback(request):
                     notes=f"Branch: {selected_branch}. Service: {service_choice}"
                 )
 
-                # --- SEND SMS ---
+                # SEND SMS
                 sms_text = f"Thank you {user_name}! Your session at {selected_branch} is confirmed for {d} at {t}."
                 send_ussd_sms(phone_number, sms_text)
 

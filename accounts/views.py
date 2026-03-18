@@ -9,8 +9,13 @@ from datetime import date
 from .models import User
 from django.utils import timezone
 from django.contrib import messages
-def home(request):
-    return render(request, 'index.html')
+
+
+
+# -------------------------------
+#  AUTH RELATED VIEWS
+#
+# -------------------------------
 def register(request):
     if request.method == 'POST':
         form = PatientRegistrationForm(request.POST)
@@ -38,12 +43,53 @@ def login_view(request):
         form = AuthenticationForm()
     return render(request, 'accounts/login.html', {'form': form})
 
+# -------------------------------
+#  GENERAL VIEWS
+#
+# -------------------------------
+def home(request):
+    return render(request, 'index.html')
+
+@login_required
+def settings_view(request):
+    if request.method == 'POST':
+        form = ProfileUpdateForm(request.POST, instance=request.user)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Profile details updated successfully!")
+            return redirect('settings')
+    else:
+        form = ProfileUpdateForm(instance=request.user)
+
+    return render(request, 'accounts/settings.html', {'form': form})
+
+@login_required
+def toggle_risk(request, user_id):
+    # Only therapists can flag patients
+    if request.user.role != 'therapist':
+        return redirect('dashboard')
+
+    patient = User.objects.get(pk=user_id)
+
+    # Flip the status (True -> False, or False -> True)
+    patient.is_high_risk = not patient.is_high_risk
+    patient.save()
+
+    status_msg = "High Risk" if patient.is_high_risk else "Not a risk"
+    messages.warning(request, f"Patient flagged as {status_msg}.")
+
+    return redirect('therapist_patients')
+
+# -------------------------------
+#  USER DASHBOARD RELATED VIEWS
+#
+# -------------------------------
 @login_required
 def dashboard(request):
     user = request.user
     today = timezone.now().date()
 
-    # This pulls today's online confirmed sessions for the Join Card
+    # Pulls today's online confirmed sessions for the Join Card
     upcoming_appointments = Appointment.objects.filter(
         patient=user,
         status='Confirmed',
@@ -61,6 +107,7 @@ def dashboard(request):
         'unread_count': unread_count,
     }
     return render(request, 'accounts/patient_dashboard.html', context)
+
 @login_required
 def therapist_dashboard(request):
     # 1. Security Check
@@ -74,17 +121,17 @@ def therapist_dashboard(request):
         status='pending'
     ).order_by('date', 'time')
 
-    # NEW: Fetch Approved Sessions for Today so the link shows up!
+    # Fetch Approved Sessions for Today (link generation)
     approved_sessions = Appointment.objects.filter(
         therapist=request.user,
         date=date.today(),
         status='confirmed'
     ).order_by('time')
 
-    # 3. Calculate the counts
+    # the counts
     pending_count = pending_requests.count()
 
-    # Update this to count the approved sessions we just fetched
+    # count of the approved sessions
     todays_count = approved_sessions.count()
 
     # Count distinct patients assigned to this therapist
@@ -92,7 +139,7 @@ def therapist_dashboard(request):
         therapist=request.user
     ).values('patient').distinct().count()
 
-    # 4. specific context dictionary
+    # context dictionary
     context = {
         'pending_requests': pending_requests,
         'approved_sessions': approved_sessions,
@@ -102,12 +149,13 @@ def therapist_dashboard(request):
     }
 
     return render(request, 'accounts/therapist_dashboard.html', context)
+
 @login_required
 def therapist_appointments(request):
     if request.user.role != 'therapist':
         return redirect('dashboard')
 
-    # Get ALL appointments (not just pending)
+    # Get all appointments
     appointments = Appointment.objects.filter(therapist=request.user).order_by('-date', '-time')
     return render(request, 'accounts/therapist_appointments.html', {'appointments': appointments})
 
@@ -124,10 +172,10 @@ def therapist_patients(request):
 
 @login_required
 def approve_appointment(request, pk):
-    # 1. Get the specific appointment by its ID (pk)
+    # specific appointment by its ID (pk)
     appointment = get_object_or_404(Appointment, pk=pk)
 
-    # 2. Security Check: Ensure only the assigned therapist can approve it
+    # Ensures only the assigned therapist can approve it
     if request.user != appointment.therapist:
         messages.error(request, "You are not authorized to manage this appointment.")
         return redirect('therapist_dashboard')
@@ -138,6 +186,7 @@ def approve_appointment(request, pk):
 
     messages.success(request, f"Appointment with {appointment.patient.first_name} confirmed!")
     return redirect('therapist_dashboard')
+
 @login_required
 def decline_appointment(request, pk):
     appointment = get_object_or_404(Appointment, pk=pk)
@@ -152,32 +201,3 @@ def decline_appointment(request, pk):
     messages.warning(request, "Appointment request declined.")
     return redirect('therapist_dashboard')
 
-@login_required
-def settings_view(request):
-    if request.method == 'POST':
-        form = ProfileUpdateForm(request.POST, instance=request.user)
-        if form.is_valid():
-            form.save()
-            messages.success(request, "Profile details updated successfully!")
-            return redirect('settings')
-    else:
-        form = ProfileUpdateForm(instance=request.user)
-
-    return render(request, 'accounts/settings.html', {'form': form})
-
-@login_required
-def toggle_risk(request, user_id):
-    # Security: Only therapists can do this
-    if request.user.role != 'therapist':
-        return redirect('dashboard')
-
-    patient = User.objects.get(pk=user_id)
-
-    # Flip the status (True -> False, or False -> True)
-    patient.is_high_risk = not patient.is_high_risk
-    patient.save()
-
-    status_msg = "High Risk" if patient.is_high_risk else "Not a risk"
-    messages.warning(request, f"Patient flagged as {status_msg}.")
-
-    return redirect('therapist_patients')

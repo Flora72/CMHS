@@ -132,7 +132,6 @@
     let lastMessageCount = 0;
     let lastMessagesData = "";
 
-    // CLOSE MENUS WHEN CLICKING OUTSIDE
     document.addEventListener('click', function(e) {
         if (!e.target.closest('.message-menu-btn') && !e.target.closest('.message-dropdown')) {
             document.querySelectorAll('.message-dropdown').forEach(el => el.classList.add('hidden'));
@@ -165,21 +164,15 @@
             let bubbleClass, textClass, content, timeClass;
 
             if (msg.is_deleted) {
-                // --- NEW "PLEASANT" DELETED STYLE ---
-                // Light grey background, grey border, no shadow
                 bubbleClass = 'bg-gray-50 border border-gray-100 text-gray-400 rounded-xl px-3 py-2';
-
-                // Small, italic text
                 textClass = 'text-xs italic flex items-center gap-2';
 
-                // Use a soft Trash icon instead of the Red Stop sign
                 content = `
                     <svg class="w-3 h-3 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
                     <span>This message was deleted</span>
                 `;
-                timeClass = 'hidden'; // Hide time for deleted messages to keep it minimal
+                timeClass = 'hidden';
             } else {
-                // --- NORMAL MESSAGE STYLE ---
                 bubbleClass = isMe
                     ? 'bg-chiromo-navy text-white rounded-br-none shadow-md group px-5 py-3'
                     : 'bg-white text-gray-800 rounded-bl-none shadow-sm border border-gray-100 px-5 py-3';
@@ -189,7 +182,6 @@
                 timeClass = isMe ? 'text-blue-200' : 'text-gray-400';
             }
 
-            // --- MENU BUTTON (Only for non-deleted, own messages) ---
             let menuHTML = '';
             if (isMe && !msg.is_deleted && (msg.can_edit || msg.can_delete)) {
                 menuHTML = `
@@ -220,7 +212,6 @@
 
     function scrollToBottom() { chatContainer.scrollTop = chatContainer.scrollHeight; }
 
-    // --- MENU & MODALS (No changes needed here, just keep them working) ---
     window.toggleMenu = function(e, menuId) {
         e.stopPropagation();
         document.querySelectorAll('.message-dropdown').forEach(el => {
