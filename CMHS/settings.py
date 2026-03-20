@@ -155,7 +155,6 @@ MPESA_SHORTCODE = '174379'
 MPESA_PASSKEY = 'bfb279f9aa9bdbcf158e97dd71a467cd2e0c893059b10f78e6b72ada1ed2c919'
 
 # settings.py
-
 JAZZMIN_SETTINGS = {
     # TITLE & HEADER
     "site_title": "Admin Dashboard",
@@ -179,7 +178,7 @@ JAZZMIN_SETTINGS = {
     "topmenu_links": [
         {"name": "Home", "url": "admin:index", "permissions": ["auth.view_user"]},
         {"name": "View Site", "url": "/", "new_window": True},
-        {"name": "Sign Out", "url": "#logout", "icon": "fas fa-sign-out-alt"},
+        {"name": "Sign Out", "url": "admin:logout", "icon": "fas fa-sign-out-alt"},
     ],
 
     # SIDEBAR CONFIGURATION
@@ -201,8 +200,16 @@ JAZZMIN_SETTINGS = {
         "sites.site": "fas fa-globe",
     },
 
-    # CUSTOM LINKS & PDF EXPORT
+    # CUSTOM LINKS
     "custom_links": {
+        "accounts": [
+            {
+                "name": "Sign Out",
+                "url": "/admin/logout/",
+                "icon": "fas fa-power-off",
+                "permissions": ["auth.view_user"]
+            }
+        ],
         "appointments": [
             {
                 "name": "Download PDF Summary",
@@ -221,7 +228,6 @@ JAZZMIN_SETTINGS = {
     "changeform_format": "horizontal_tabs",
     "related_modal_active": True,
 }
-
 # MOBILE RESPONSIVENESS
 JAZZMIN_UI_TWEAKS = {
     "navbar_small_text": False,
