@@ -93,6 +93,11 @@ DATABASES = {
         conn_max_age=600
     )
 }
+
+
+USE_X_FORWARDED_HOST = True
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+
 # Password validation
 # https://docs.djangoproject.com/en/6.0/ref/settings/#auth-password-validators
 
@@ -149,47 +154,54 @@ MPESA_CONSUMER_SECRET = 'O9B480y6uxxkv50i0ZF2oQFflnkldlyeY9AfA8jc4fHGG5yBlM83730
 MPESA_SHORTCODE = '174379'
 MPESA_PASSKEY = 'bfb279f9aa9bdbcf158e97dd71a467cd2e0c893059b10f78e6b72ada1ed2c919'
 
+# settings.py
 
 JAZZMIN_SETTINGS = {
-
+    # TITLE & HEADER
     "site_title": "Admin Dashboard",
     "site_header": "Chiromo MHS",
     "site_brand": "Online CMHS",
     "site_icon": "images/chiromo_logo.png",
 
-    # LOGO
+    # LOGO CONFIGURATION
     "site_logo": "images/chiromo_logo.png",
     "login_logo": "images/chiromo_logo.png",
     "site_logo_classes": "img-fluid",
 
+    # WELCOME & COPYRIGHT
     "welcome_sign": "Chiromo Mental Health System",
     "copyright": "Chiromo Hospital Group © 2026",
+
+    # GLOBAL SEARCH
     "search_model": ["accounts.User", "appointments.Appointment", "payments.Transaction"],
 
-    # TOP NAVBAR
+    # TOP NAVBAR LINKS
     "topmenu_links": [
         {"name": "Home", "url": "admin:index", "permissions": ["auth.view_user"]},
         {"name": "View Site", "url": "/", "new_window": True},
         {"name": "Sign Out", "url": "#logout", "icon": "fas fa-sign-out-alt"},
     ],
 
-    # SIDEBAR
+    # SIDEBAR CONFIGURATION
     "show_sidebar": True,
-    "navigation_expanded": True,
-    "order_with_respect_to": ["accounts", "appointments", "payments"],
+    "navigation_expanded": False,
+    "order_with_respect_to": ["accounts", "appointments", "payments", "sites"],
 
+    # MODEL VISIBILITY
     "hide_models": [
         "appointments.SessionLog",
         "auth.Group",
     ],
 
+    # ICONS
     "icons": {
         "accounts.user": "fas fa-user-md",
         "appointments.appointment": "fas fa-calendar-check",
         "payments.transaction": "fas fa-file-invoice-dollar",
+        "sites.site": "fas fa-globe",
     },
 
-    # SIDEBAR PDF LINK
+    # CUSTOM LINKS & PDF EXPORT
     "custom_links": {
         "appointments": [
             {
@@ -201,23 +213,47 @@ JAZZMIN_SETTINGS = {
         ],
     },
 
+    # UI HANDLERS
     "custom_js": "admin/js/tab_fix.js",
     "use_google_fonts": True,
     "show_ui_builder": False,
     "theme": "flatly",
     "changeform_format": "horizontal_tabs",
+    "related_modal_active": True,
 }
 
-JAZZMIN_UI_TUNER = {
-    "navbar": "navbar-navy",
-    "sidebar": "sidebar-dark-navy",
-    "accent": "accent-warning",
-    "brand_colour": "navbar-navy",
+# MOBILE RESPONSIVENESS
+JAZZMIN_UI_TWEAKS = {
+    "navbar_small_text": False,
+    "footer_small_text": False,
+    "body_small_text": False,
+    "brand_small_text": False,
+    "brand_colour": "navbar-dark",
+    "accent": "accent-primary",
+    "navbar": "navbar-dark",
+    "no_navbar_border": False,
     "navbar_fixed": True,
+    "layout_boxed": False,
+    "footer_fixed": False,
     "sidebar_fixed": True,
-    "no_navbar_border": True,
+    "sidebar": "sidebar-dark-primary",
+    "sidebar_nav_small_text": False,
+    "sidebar_disable_expand": False,
+    "sidebar_nav_child_indent": True,
+    "sidebar_nav_compact_style": False,
+    "sidebar_nav_legacy_style": False,
+    "sidebar_nav_flat_style": False,
+    "theme": "flatly",
+    "dark_mode_theme": None,
+    "button_classes": {
+        "primary": "btn-primary",
+        "secondary": "btn-secondary",
+        "info": "btn-info",
+        "warning": "btn-warning",
+        "danger": "btn-danger",
+        "success": "btn-success"
+    }
 }
-
 LOGOUT_REDIRECT_URL = '/'
 
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
