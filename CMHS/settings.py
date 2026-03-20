@@ -155,6 +155,7 @@ MPESA_SHORTCODE = '174379'
 MPESA_PASSKEY = 'bfb279f9aa9bdbcf158e97dd71a467cd2e0c893059b10f78e6b72ada1ed2c919'
 
 # settings.py
+
 JAZZMIN_SETTINGS = {
     # TITLE & HEADER
     "site_title": "Admin Dashboard",
@@ -181,15 +182,18 @@ JAZZMIN_SETTINGS = {
         {"name": "Sign Out", "url": "admin:logout", "icon": "fas fa-sign-out-alt"},
     ],
 
-    # SIDEBAR CONFIGURATION
+    # SIDEBAR CONFIGURATION (FLATTENED)
     "show_sidebar": True,
     "navigation_expanded": False,
-    "order_with_respect_to": ["accounts", "appointments", "payments", "sites"],
+    "hide_apps": [],
+    "hide_models": ["appointments.SessionLog", "auth.Group"],
 
-    # MODEL VISIBILITY
-    "hide_models": [
-        "appointments.SessionLog",
-        "auth.Group",
+
+    "order_with_respect_to": [
+        "accounts.User",
+        "appointments.Appointment",
+        "payments.Transaction",
+        "sites.Site"
     ],
 
     # ICONS
@@ -200,7 +204,7 @@ JAZZMIN_SETTINGS = {
         "sites.site": "fas fa-globe",
     },
 
-    # CUSTOM LINKS
+    # CUSTOM LINKS (Merged for Mobile Sign Out & PDF)
     "custom_links": {
         "accounts": [
             {
@@ -221,44 +225,25 @@ JAZZMIN_SETTINGS = {
     },
 
     # UI HANDLERS
-    "custom_js": "admin/js/tab_fix.js",
     "use_google_fonts": True,
     "show_ui_builder": False,
     "theme": "flatly",
     "changeform_format": "horizontal_tabs",
     "related_modal_active": True,
+    "custom_js": "admin/js/tab_fix.js",
 }
-# MOBILE RESPONSIVENESS
+
+# UI TWEAKS FOR MOBILE RESPONSIVENESS
 JAZZMIN_UI_TWEAKS = {
-    "navbar_small_text": False,
-    "footer_small_text": False,
-    "body_small_text": False,
-    "brand_small_text": False,
+    "navbar_fixed": True,
+    "sidebar_fixed": False,
+    "sidebar_disable_expand": False,
+    "sidebar_nav_compact_style": True,
+    "theme": "flatly",
+    "navbar": "navbar-dark",
     "brand_colour": "navbar-dark",
     "accent": "accent-primary",
-    "navbar": "navbar-dark",
-    "no_navbar_border": False,
-    "navbar_fixed": True,
-    "layout_boxed": False,
-    "footer_fixed": False,
-    "sidebar_fixed": True,
     "sidebar": "sidebar-dark-primary",
-    "sidebar_nav_small_text": False,
-    "sidebar_disable_expand": False,
-    "sidebar_nav_child_indent": True,
-    "sidebar_nav_compact_style": False,
-    "sidebar_nav_legacy_style": False,
-    "sidebar_nav_flat_style": False,
-    "theme": "flatly",
-    "dark_mode_theme": None,
-    "button_classes": {
-        "primary": "btn-primary",
-        "secondary": "btn-secondary",
-        "info": "btn-info",
-        "warning": "btn-warning",
-        "danger": "btn-danger",
-        "success": "btn-success"
-    }
 }
 LOGOUT_REDIRECT_URL = '/'
 
