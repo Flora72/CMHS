@@ -76,23 +76,23 @@ WSGI_APPLICATION = 'CMHS.wsgi.application'
 #     }
 # }
 
-DATABASES = {
-    'default' : {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'cmhs_db',
-        'USER': 'postgres',
-        'PASSWORD': '1234',
-        'HOST': 'localhost',
-        'PORT': '5432',
-    }
-}
-
 # DATABASES = {
-#     'default': dj_database_url.config(
-#         default='postgresql://admin:7keu8lM4nOTjKw9T76FNe1o2WPiIrwBU@dpg-d6tgmu450q8c73ffl000-a.oregon-postgres.render.com/cmhs_db',
-#         conn_max_age=600
-#     )
+#     'default' : {
+#         'ENGINE': 'django.db.backends.postgresql',
+#         'NAME': 'cmhs_db',
+#         'USER': 'postgres',
+#         'PASSWORD': '1234',
+#         'HOST': 'localhost',
+#         'PORT': '5432',
+#     }
 # }
+
+DATABASES = {
+    'default': dj_database_url.config(
+        default='postgresql://admin:7keu8lM4nOTjKw9T76FNe1o2WPiIrwBU@dpg-d6tgmu450q8c73ffl000-a.oregon-postgres.render.com/cmhs_db',
+        conn_max_age=600
+    )
+}
 # Password validation
 # https://docs.djangoproject.com/en/6.0/ref/settings/#auth-password-validators
 
