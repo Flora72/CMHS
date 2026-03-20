@@ -13,15 +13,16 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = 'django-insecure-zu_@phyfzk+vi&xu&v26k9*zefpv!hy%j$!%gz^&l-dgnc1c6!'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
+DEBUG = True
 
-ALLOWED_HOSTS = ['cmhs.onrender.com', 'alline-hirtellous-dario.ngrok-free.dev']
-
+ALLOWED_HOSTS = ['cmhs.onrender.com', '127.0.0.1', 'alline-hirtellous-dario.ngrok-free.dev', '*']
+SITE_ID = 1
 # Application definition
 
 INSTALLED_APPS = [
     'jazzmin',
     'django.contrib.admin',
+    'django.contrib.sites',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
@@ -75,23 +76,23 @@ WSGI_APPLICATION = 'CMHS.wsgi.application'
 #     }
 # }
 
-# DATABASES = {
-#     'default' : {
-#         'ENGINE': 'django.db.backends.postgresql',
-#         'NAME': 'cmhs_db',
-#         'USER': 'postgres',
-#         'PASSWORD': '1234',
-#         'HOST': 'localhost',
-#         'PORT': '5432',
-#     }
-# }
-
 DATABASES = {
-    'default': dj_database_url.config(
-        default='postgresql://admin:7keu8lM4nOTjKw9T76FNe1o2WPiIrwBU@dpg-d6tgmu450q8c73ffl000-a.oregon-postgres.render.com/cmhs_db',
-        conn_max_age=600
-    )
+    'default' : {
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': 'cmhs_db',
+        'USER': 'postgres',
+        'PASSWORD': '1234',
+        'HOST': 'localhost',
+        'PORT': '5432',
+    }
 }
+
+# DATABASES = {
+#     'default': dj_database_url.config(
+#         default='postgresql://admin:7keu8lM4nOTjKw9T76FNe1o2WPiIrwBU@dpg-d6tgmu450q8c73ffl000-a.oregon-postgres.render.com/cmhs_db',
+#         conn_max_age=600
+#     )
+# }
 # Password validation
 # https://docs.djangoproject.com/en/6.0/ref/settings/#auth-password-validators
 
@@ -147,7 +148,7 @@ MPESA_CONSUMER_KEY = 'jXwNbMHUommAkHjNj9Az0it67zicDIyTVOGT0VFFAPA4y2hC'
 MPESA_CONSUMER_SECRET = 'O9B480y6uxxkv50i0ZF2oQFflnkldlyeY9AfA8jc4fHGG5yBlM83730EoOdksB6T'
 MPESA_SHORTCODE = '174379'
 MPESA_PASSKEY = 'bfb279f9aa9bdbcf158e97dd71a467cd2e0c893059b10f78e6b72ada1ed2c919'
-MPESA_INITIATOR_PASSWORD = 'YOUR_INITIATOR_PASSWORD'
+
 
 JAZZMIN_SETTINGS = {
 
