@@ -49,21 +49,20 @@ class SessionLog(models.Model):
         return f"Session: {self.patient.username} - {self.session_date}"
 
 class Payment(models.Model):
-    PAYMENT_STATUS = (
-        ('pending', 'Pending'),
-        ('completed', 'Completed'),
-        ('failed', 'Failed'),
-    )
-
+    # Linking the payment directly to the appointment
     patient = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
-    appointment = models.OneToOneField(Appointment, on_delete=models.SET_NULL, null=True, blank=True)
+    appointment = models.OneToOneField('Appointment', on_delete=models.SET_NULL, null=True, blank=True)
     amount = models.DecimalField(max_digits=10, decimal_places=2)
-    transaction_code = models.CharField(max_length=50, unique=True, help_text="M-Pesa Transaction ID")
-    status = models.CharField(max_length=20, choices=PAYMENT_STATUS, default='pending')
+
+    # Updated to handle the same M-Pesa Receipt logic
+    transaction_code = models.CharField(max_length=50, unique=True, null=True, blank=True)
+    status = models.CharField(max_length=20,
+                              choices=[('pending', 'Pending'), ('completed', 'Completed'), ('failed', 'Failed')],
+                              default='pending')
     timestamp = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        return f"{self.transaction_code} - {self.amount}"
+        return f"Payment {self.transaction_code} for {self.patient.username}"
 
 class MoodEntry(models.Model):
     MOOD_CHOICES = [
