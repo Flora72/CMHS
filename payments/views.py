@@ -51,9 +51,9 @@ def initiate_payment(request, appointment_id=None):
     # Check if paying for a session or premium
     if appointment_id:
         appointment = get_object_or_404(Appointment, id=appointment_id)
-        amount = 1  # Testing rate
+        amount = 1
     else:
-        amount = 1  # Testing rate (Premium)
+        amount = 1
 
     if request.method == 'POST':
         phone = request.POST.get('phone')
@@ -73,12 +73,11 @@ def initiate_payment(request, appointment_id=None):
             status='pending'
         )
 
-        # Trigger M-Pesa API
-        callback_url = "https://cmhs.onrender.com/appointments/mpesa-callback/"
+        callback_url = "https://cmhs.onrender.com/payments/callback/"
         res = lipa_na_mpesa_online(formatted_phone, amount, callback_url)
 
         if res.get('ResponseCode') == '0':
-            # Save the unique Checkout ID from Safaricom
+
             transaction.checkout_request_id = res['CheckoutRequestID']
             transaction.save()
 
@@ -87,14 +86,13 @@ def initiate_payment(request, appointment_id=None):
                     patient=user,
                     appointment=appointment,
                     amount=amount,
-                    transaction_code=res['CheckoutRequestID'],  # Placeholder until callback
+                    transaction_code=res['CheckoutRequestID'],
                     status='pending'
                 )
 
             messages.success(request, "STK Push sent. Please check your handset.")
 
-            # THE FIX: Pass the checkout_id to the success view
-            return redirect(f'/payments/success/?checkout_id={transaction.checkout_request_id}')
+            return redirect(f'/payments/pay/success/?checkout_id={transaction.checkout_request_id}')
 
         else:
             transaction.status = 'failed'
