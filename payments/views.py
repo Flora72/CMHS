@@ -12,78 +12,94 @@ from django.core.mail import send_mail
 from .sms_service import send_ussd_sms
 
 
-
 @login_required
 def pricing_page(request):
     return render(request, 'payments/pricing.html')
 
+
 @login_required
 def payment_success(request):
-    return render(request, 'payments/success.html')
+    """
+    Renders the success page.
+    Uses checkout_id to pull real-time M-Pesa transaction data.
+    """
+    checkout_id = request.GET.get('checkout_id')
+    transaction = None
 
+    if checkout_id:
+        # Fetch the transaction object updated by the mpesa_callback
+        transaction = Transaction.objects.filter(checkout_request_id=checkout_id).first()
+
+    context = {
+        'transaction': transaction,
+        'full_name': request.user.get_full_name() or request.user.username,
+        # Check if the RDK... code has been saved by the callback yet
+        'is_confirmed': transaction and transaction.transaction_code and not transaction.transaction_code.startswith(
+            'ws_')
+    }
+    return render(request, 'payments/success.html', context)
 
 @login_required
 def initiate_payment(request, appointment_id=None):
     """
-    Handles M-Pesa STK Push for clinical sessions.
-    Links the transaction to a specific appointment.
+    Handles M-Pesa STK Push.
+    Redirects to success page with checkout_id for real-time data fetching.
     """
     user = request.user
-
     appointment = None
+
+    # Check if paying for a session or premium
     if appointment_id:
         appointment = get_object_or_404(Appointment, id=appointment_id)
-        amount = 1
-        transaction_desc = f"Therapy Session: {appointment.therapist.last_name}"
+        amount = 1  # Testing rate
     else:
-
-        amount = 1
-        transaction_desc = "CMHS Premium Subscription"
+        amount = 1  # Testing rate (Premium)
 
     if request.method == 'POST':
         phone = request.POST.get('phone')
-
         if not phone:
             messages.error(request, "Please enter a phone number.")
             return render(request, 'payments/initiate.html', {'appointment': appointment})
 
+        # Format phone for Safaricom
+        formatted_phone = '254' + phone[1:] if phone.startswith('0') else phone
 
-        formatted_phone = '254' + phone[1:] if phone.startswith('0') else phone if phone.startswith('254') else phone
-
-
+        # Create the initial pending transaction
         transaction = Transaction.objects.create(
             user=user,
             phone_number=formatted_phone,
             amount=amount,
+            payment_type='session' if appointment_id else 'premium',
             status='pending'
         )
 
-        # 2. Trigger M-Pesa STK Push
+        # Trigger M-Pesa API
         callback_url = "https://cmhs.onrender.com/appointments/mpesa-callback/"
         res = lipa_na_mpesa_online(formatted_phone, amount, callback_url)
 
         if res.get('ResponseCode') == '0':
-
+            # Save the unique Checkout ID from Safaricom
             transaction.checkout_request_id = res['CheckoutRequestID']
             transaction.save()
-
 
             if appointment:
                 Payment.objects.create(
                     patient=user,
                     appointment=appointment,
                     amount=amount,
-                    transaction_code=res['CheckoutRequestID'],
+                    transaction_code=res['CheckoutRequestID'],  # Placeholder until callback
                     status='pending'
                 )
 
-            messages.success(request, f"STK Push sent to {phone}. Please enter your PIN.")
-            return redirect('payment_success')
+            messages.success(request, "STK Push sent. Please check your handset.")
+
+            # THE FIX: Pass the checkout_id to the success view
+            return redirect(f'/payments/success/?checkout_id={transaction.checkout_request_id}')
 
         else:
             transaction.status = 'failed'
             transaction.save()
-            messages.error(request, f"M-Pesa Error: {res.get('errorMessage', 'Connection failed')}")
+            messages.error(request, f"M-Pesa Error: {res.get('errorMessage')}")
             return redirect('dashboard')
 
     return render(request, 'payments/initiate.html', {
@@ -144,7 +160,6 @@ def mpesa_callback(request):
             print(f"Callback Logic Error: {e}")
 
     return JsonResponse({'status': 'ok'})
-
 
 @login_required
 def generate_receipt(request, tx_id):

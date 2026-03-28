@@ -3,36 +3,62 @@
 {% block navbar %}{% endblock %}
 
 {% block content %}
-<div class="min-h-screen bg-green-50 flex items-center justify-center p-4">
+<div class="min-h-screen bg-green-50 flex items-center justify-center p-4 font-sans">
     <div class="bg-white p-10 rounded-3xl shadow-xl max-w-md w-full text-center border border-green-100 relative overflow-hidden">
-        
+
         <div class="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-green-400 to-teal-500"></div>
 
         <div class="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6 shadow-sm">
-            <svg class="w-10 h-10 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>
+            <svg class="w-10 h-10 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path>
+            </svg>
         </div>
 
-        <h1 class="text-3xl font-bold text-gray-800 mb-2">Payment Approved!</h1>
-        <p class="text-gray-500 mb-8">Your premium subscription is now active.</p>
+        <h1 class="text-3xl font-bold text-gray-800 mb-2">Payment Received!</h1>
+        <p class="text-gray-500 mb-8">
+            {% if transaction.payment_type == 'premium' %}
+                Your premium subscription is now active.
+            {% else %}
+                Your clinical session is confirmed.
+            {% endif %}
+        </p>
 
-        <div class="bg-gray-50 rounded-xl p-4 mb-8 text-left space-y-3 text-sm border border-gray-100">
-            <div class="flex justify-between">
-                <span class="text-gray-500">Amount Paid</span>
-                <span class="font-bold text-gray-800">KES 1,500.00</span>
+        <div class="bg-gray-50 rounded-xl p-6 mb-8 text-left space-y-4 text-sm border border-gray-100">
+            <div class="flex justify-between border-b border-gray-200 pb-2">
+                <span class="text-gray-500 uppercase font-bold text-[10px] tracking-widest">Amount Paid</span>
+                <span class="font-black text-chiromo-navy">KES {{ transaction.amount|default:"1.00" }}</span>
             </div>
-            <div class="flex justify-between">
-                <span class="text-gray-500">Phone Number</span>
-                <span class="font-bold text-gray-800">{{ request.user.phone_number }}</span>
+
+            <div class="flex justify-between border-b border-gray-200 pb-2">
+                <span class="text-gray-500 uppercase font-bold text-[10px] tracking-widest">Transaction ID</span>
+                <span class="font-mono font-bold text-chiromo-navy">
+                    {% if transaction.transaction_code %}
+                        {{ transaction.transaction_code }}
+                    {% else %}
+                        <span class="text-yellow-600 animate-pulse">Processing...</span>
+                    {% endif %}
+                </span>
             </div>
+
             <div class="flex justify-between">
-                <span class="text-gray-500">Transaction ID</span>
-                <span class="font-mono text-gray-800">CONFIRMED</span>
+                <span class="text-gray-500 uppercase font-bold text-[10px] tracking-widest">Payer</span>
+                <span class="font-bold text-gray-800 text-right">{{ full_name|default:user.get_full_name }}</span>
             </div>
         </div>
 
-        <a href="{% url 'dashboard' %}" class="block w-full py-4 bg-chiromo-navy text-white font-bold rounded-xl shadow-lg hover:bg-blue-900 transition transform hover:-translate-y-1">
-            Go to Dashboard
-        </a>
+        <div class="space-y-4">
+            <a href="{% url 'dashboard' %}" class="block w-full py-4 bg-chiromo-navy text-white font-bold rounded-xl shadow-lg hover:bg-blue-900 transition transform hover:-translate-y-1">
+                Go to Dashboard
+            </a>
+
+            {% if transaction.transaction_code %}
+                <a href="{% url 'generate_receipt' transaction.id %}" target="_blank" class="block text-sm font-bold text-chiromo-gold hover:text-yellow-600 transition">
+                    <i class="fas fa-file-pdf mr-1"></i> Download Official Receipt
+                </a>
+            {% else %}
+                <p class="text-[10px] text-gray-400 italic">Refreshing for receipt code... (hit F5 if still processing)</p>
+            {% endif %}
+        </div>
     </div>
 </div>
 {% endblock %}
