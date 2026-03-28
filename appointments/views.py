@@ -143,32 +143,43 @@ def calendar_view(request):
 @login_required
 @premium_required
 def book_appointment(request):
+    """
+    Handles the booking of clinical sessions.
+    Updated to redirect to the M-Pesa payment gateway before final confirmation.
+    """
     if request.method == 'POST':
         form = BookingForm(request.POST)
         if form.is_valid():
+            # 1. Save the appointment but keep it in 'pending' status
             appointment = form.save(commit=False)
             appointment.patient = request.user
+            appointment.status = 'pending'
             appointment.save()
 
-            # Generate  Link
+            # 2. Generate the Telehealth Link (if online)
             if appointment.mode == 'online':
                 date_str = appointment.date.strftime('%Y%m%d')
+                # Custom Jitsi/8x8 URL structure for Chiromo
                 appointment.meeting_link = f"https://8x8.vc/vpaas-magic-cookie-chiromo-demo/CMHS-Therapy-{appointment.id}-{date_str}"
                 appointment.save()
 
-            # Email Notification Logic
-            subject = 'Appointment Confirmed - Chiromo Hospital'
+            # 3. Trigger Email Notification (Drafting the record)
+            subject = 'Appointment Initiated - Chiromo Hospital'
             meeting_info = appointment.meeting_link if appointment.mode == 'online' else 'Physical Session at Branch'
 
             message = f"""
 Dear {request.user.first_name},
-Your appointment has been successfully booked.
 
-Therapist: {appointment.therapist.username}
+Your appointment request has been received. 
+
+Therapist: Dr. {appointment.therapist.last_name}
 Date: {appointment.date}
 Time: {appointment.time}
 Session Type: {appointment.mode}
-Meeting Link: {meeting_info}
+Status: Pending Payment
+
+Please complete your M-Pesa transaction to finalize this booking.
+Meeting Link (Active after payment): {meeting_info}
 
 Recovery in Dignity.
             """
@@ -181,13 +192,17 @@ Recovery in Dignity.
                 fail_silently=True
             )
 
-            messages.success(request, 'Your session has been booked successfully! Check your email.')
-            return redirect('dashboard')
+            # 4. REDIRECT TO PAYMENT
+            # This is the new logic that bridges the gap to the M-Pesa STK Push
+            messages.info(request, 'Appointment saved. Please enter your M-Pesa PIN to finalize the session fee.')
+            return redirect('initiate_session_payment', appointment_id=appointment.id)
 
     else:
         form = BookingForm()
 
+    # Filter to show only active therapists in the selection cards
     therapists = User.objects.filter(role='therapist')
+
     context = {
         'form': form,
         'therapists': therapists
@@ -457,10 +472,9 @@ def assessment_hub(request):
     return render(request, 'appointments/assessment_hub.html')
 
 def take_assessment(request):
-    # Get the disorder type from the URL, default to 'general'
     disorder_type = request.GET.get('type', 'general')
 
-    # Clinical Questions
+    # Define the questions and scoring thresholds for each test
     assessment_data = {
         'general': {
             'title': 'General Mental Health Check-in',
@@ -478,7 +492,9 @@ def take_assessment(request):
             'questions': [
                 {'id': 'q1', 'label': 'Little interest or pleasure in doing things'},
                 {'id': 'q2', 'label': 'Feeling down, depressed, or hopeless'},
-                {'id': 'q3', 'label': 'Trouble falling or staying asleep, or sleeping too much'}
+                {'id': 'q3', 'label': 'Trouble falling or staying asleep, or sleeping too much'},
+                {'id': 'q4', 'label': 'Feeling tired or having little energy'},
+                {'id': 'q5', 'label': 'Poor appetite or overeating'}
             ]
         },
         'anxiety': {
@@ -487,7 +503,9 @@ def take_assessment(request):
             'questions': [
                 {'id': 'q1', 'label': 'Feeling nervous, anxious or on edge'},
                 {'id': 'q2', 'label': 'Not being able to stop or control worrying'},
-                {'id': 'q3', 'label': 'Trouble relaxing'}
+                {'id': 'q3', 'label': 'Worrying too much about different things'},
+                {'id': 'q4', 'label': 'Trouble relaxing'},
+                {'id': 'q5', 'label': 'Being so restless that it is hard to sit still'}
             ]
         },
         'substance': {
@@ -503,24 +521,49 @@ def take_assessment(request):
             'title': 'PTSD Screening (PC-PTSD-5)',
             'theme_color': 'indigo',
             'questions': [
-                {'id': 'q1',
-                 'label': 'Have you had nightmares about the event or thought about it when you did not want to?'},
-                {'id': 'q2',
-                 'label': 'Tried hard not to think about the event or went out of your way to avoid situations that reminded you of it?'},
+                {'id': 'q1', 'label': 'Have you had nightmares about the event or thought about it when you did not want to?'},
+                {'id': 'q2', 'label': 'Tried hard not to think about the event or went out of your way to avoid situations that reminded you of it?'},
                 {'id': 'q3', 'label': 'Were you constantly on guard, watchful, or easily startled?'}
+            ]
+        },
+        'bipolar': {
+            'title': 'Bipolar Screening',
+            'theme_color': 'pink',
+            'questions': [
+                {'id': 'q1', 'label': 'Has there ever been a period where you felt so good/hyper that you got into trouble?'},
+                {'id': 'q2', 'label': 'During this time, did you need less sleep than usual?'},
+                {'id': 'q3', 'label': 'Were you more talkative or did you speak faster than usual?'},
+                {'id': 'q4', 'label': 'Did you spend money purely on impulse?'},
+                {'id': 'q5', 'label': 'Did you experience racing thoughts?'}
             ]
         }
     }
 
-    # Fallback to general if type doesn't match
     context = assessment_data.get(disorder_type, assessment_data['general'])
 
     if request.method == 'POST':
-        #  calculate the score and redirect to results
+        # Collect all numerical values from the radio buttons
+        total_score = 0
+        for q in context['questions']:
+            value = request.POST.get(q['id'], 0)
+            total_score += int(value)
+
+        # 2. Dynamic Logic Gate
+        if total_score >= 12:
+            severity = "Severe Symptoms"
+            desc = "Your responses suggest a high level of symptoms. We strongly recommend scheduling a comprehensive clinical evaluation with a psychiatrist."
+        elif total_score >= 6:
+            severity = "Moderate Symptoms"
+            desc = "Your responses suggest moderate symptoms. Speaking with a therapist or counselor would be a helpful next step."
+        else:
+            severity = "Minimal Symptoms"
+            desc = "Your responses suggest minimal symptoms at this time. Continue prioritizing your wellness and check back if anything changes."
+
         return render(request, 'appointments/public_result.html', {
-            'result_title': f"Analysis for {context['title']}",
-            'result_desc': "Your responses suggest a moderate level of symptoms. This screening is not a diagnosis, but an indicator that speaking with a professional could be beneficial.",
-            'specialty': 'clinical' if disorder_type in ['depression', 'anxiety', 'ptsd'] else 'addiction'
+            'result_title': f"Analysis: {severity}",
+            'result_desc': desc,
+            'score': total_score,
+            'specialty': 'clinical' if disorder_type in ['depression', 'anxiety', 'ptsd', 'bipolar'] else 'addiction'
         })
 
     return render(request, 'appointments/take_assessment.html', context)

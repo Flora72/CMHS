@@ -1,0 +1,53 @@
+{% extends 'base.html' %}
+{% block title %}Payment History | CMHS{% endblock %}
+
+{% block content %}
+<div class="fixed inset-0 flex bg-gray-50 overflow-hidden font-sans">
+    {% include 'includes/patient_sidebar.html' %}
+
+    <main class="flex-1 overflow-y-auto mt-16 md:mt-0 p-4 md:p-8 w-full">
+        <div class="max-w-5xl mx-auto">
+            <div class="mb-8">
+                <h1 class="text-3xl font-bold text-chiromo-navy">Financial History</h1>
+                <p class="text-gray-500">View and download receipts for your sessions and subscriptions.</p>
+            </div>
+
+            <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+                <table class="w-full text-left border-collapse">
+                    <thead class="bg-gray-50 text-gray-400 text-xs uppercase tracking-widest font-black">
+                        <tr>
+                            <th class="px-6 py-4">Service / Type</th>
+                            <th class="px-6 py-4">M-Pesa Code</th>
+                            <th class="px-6 py-4 text-center">Amount</th>
+                            <th class="px-6 py-4">Date</th>
+                            <th class="px-6 py-4 text-right">Receipt</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-100">
+                        {% for tx in subscriptions %}
+                        <tr class="hover:bg-gray-50/50 transition">
+                            <td class="px-6 py-5">
+                                <span class="block font-bold text-chiromo-navy">Premium Access</span>
+                                <span class="text-[10px] text-purple-600 font-black uppercase">System-Wide</span>
+                            </td>
+                            <td class="px-6 py-5 font-mono text-sm text-gray-600">{{ tx.transaction_code|default:"Pending" }}</td>
+                            <td class="px-6 py-5 text-center font-bold text-gray-900">KES {{ tx.amount }}</td>
+                            <td class="px-6 py-5 text-sm text-gray-500">{{ tx.timestamp|date:"d M Y" }}</td>
+                            <td class="px-6 py-5 text-right">
+                                {% if tx.status == 'completed' %}
+                                    <a href="{% url 'generate_receipt' tx.id %}" target="_blank" class="px-3 py-1 bg-gray-100 text-chiromo-navy text-xs font-bold rounded hover:bg-chiromo-gold hover:text-white transition inline-flex items-center gap-1">
+                                        <i class="fas fa-download"></i> PDF
+                                    </a>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr><td colspan="5" class="p-10 text-center text-gray-400 italic">No transactions found.</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+</div>
+{% endblock %}

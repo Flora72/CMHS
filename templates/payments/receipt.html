@@ -1,0 +1,63 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="max-w-2xl mx-auto my-10 p-8 bg-white border shadow-lg rounded-none" id="printable-receipt">
+    <div class="flex justify-between items-start border-b-2 border-chiromo-navy pb-6 mb-6">
+        <div>
+            <h1 class="text-2xl font-black text-chiromo-navy">OFFICIAL RECEIPT</h1>
+            <p class="text-sm text-chiromo-gold font-bold">{{ motto }}</p>
+        </div>
+        <div class="text-right">
+            <p class="font-bold text-gray-800">{{ hospital }}</p>
+            <p class="text-xs text-gray-500">Nairobi, Kenya</p>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-2 gap-8 mb-10">
+        <div>
+            <p class="text-xs uppercase text-gray-400 font-bold mb-1">Billed To:</p>
+            <p class="font-bold text-lg text-gray-900">{{ full_name }}</p>
+            <p class="text-sm text-gray-600">Handset: {{ phone }}</p>
+        </div>
+        <div class="text-right">
+            <p class="text-xs uppercase text-gray-400 font-bold mb-1">Transaction ID:</p>
+            <p class="font-mono font-bold text-lg text-chiromo-navy">{{ transaction_code }}</p>
+            <p class="text-sm text-gray-600">{{ date|date:"d M Y, H:i" }}</p>
+        </div>
+    </div>
+
+    <table class="w-full mb-10">
+        <thead class="bg-gray-50 border-y border-gray-100">
+            <tr>
+                <th class="py-3 px-2 text-left text-xs font-bold text-gray-500">Description</th>
+                <th class="py-3 px-2 text-right text-xs font-bold text-gray-500">Amount</th>
+            </tr>
+        </thead>
+        <tbody class="divide-y divide-gray-100">
+            <tr>
+                <td class="py-4 px-2 text-sm text-gray-700">CMHS Clinical Service / Premium Access</td>
+                <td class="py-4 px-2 text-right font-bold text-gray-900 italic">KES {{ amount }}</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <div class="bg-chiromo-navy text-white p-4 flex justify-between items-center mb-10">
+        <span class="font-bold text-sm uppercase">Total Paid (M-PESA)</span>
+        <span class="text-xl font-black">KES {{ amount }}</span>
+    </div>
+
+    <div class="text-center">
+        <p class="text-[10px] text-gray-400 uppercase tracking-widest">Digital Stamp - System Generated</p>
+        <button onclick="window.print()" class="mt-6 px-6 py-2 bg-gray-100 text-gray-600 text-xs font-bold rounded-full hover:bg-chiromo-gold hover:text-white transition no-print">
+            <i class="fas fa-print mr-2"></i> Print or Save as PDF
+        </button>
+    </div>
+</div>
+
+<style>
+    @media print {
+        .no-print { display: none; }
+        body { background: white; }
+        #printable-receipt { border: none; shadow: none; margin: 0; padding: 0; }
+    }
+</style>
+{% endblock %}

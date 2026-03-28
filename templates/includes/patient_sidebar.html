@@ -13,14 +13,13 @@
         <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
     </button>
 
-    <div class="flex flex-col space-y-6 pt-20 px-8">
+    <div class="flex flex-col space-y-6 pt-20 px-8 overflow-y-auto">
         <a href="{% url 'dashboard' %}" class="text-white text-xl font-medium border-b border-blue-900 pb-2 hover:text-chiromo-gold">Dashboard</a>
         <a href="{% url 'calendar' %}" class="text-white text-xl font-medium border-b border-blue-900 pb-2 hover:text-chiromo-gold">Calendar</a>
         <a href="{% url 'patient_appointments' %}" class="text-white text-xl font-medium border-b border-blue-900 pb-2 hover:text-chiromo-gold">My Appointments</a>
+        <a href="{% url 'transaction_history' %}" class="text-white text-xl font-medium border-b border-blue-900 pb-2 hover:text-chiromo-gold">Payment History</a>
         <a href="{% url 'inbox' %}" class="text-white text-xl font-medium border-b border-blue-900 pb-2 hover:text-chiromo-gold">Messages</a>
-
         <a href="{% url 'journal' %}" class="text-white text-xl font-medium border-b border-blue-900 pb-2 hover:text-chiromo-gold">My Journal</a>
-
         <a href="{% url 'patient_resources' %}" class="text-white text-xl font-medium border-b border-blue-900 pb-2 hover:text-chiromo-gold">Resources</a>
         <a href="{% url 'settings' %}" class="text-white text-xl font-medium border-b border-blue-900 pb-2 hover:text-chiromo-gold">Settings</a>
 
@@ -49,6 +48,11 @@
             <a href="{% url 'dashboard' %}" class="flex items-center gap-3 px-4 py-3 {% if request.resolver_match.url_name == 'dashboard' %}bg-white/10 text-white border-l-4 border-chiromo-gold{% else %}text-gray-300 hover:bg-white/5 hover:text-white{% endif %} rounded-lg transition">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path></svg>
                 <span class="font-medium">Dashboard</span>
+            </a>
+
+            <a href="{% url 'transaction_history' %}" class="flex items-center gap-3 px-4 py-3 {% if request.resolver_match.url_name == 'transaction_history' %}bg-white/10 text-white border-l-4 border-chiromo-gold{% else %}text-gray-300 hover:bg-white/5 hover:text-white{% endif %} rounded-lg transition">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                <span class="font-medium">Payment History</span>
             </a>
 
             <a href="{% url 'calendar' %}" class="flex items-center gap-3 px-4 py-3 {% if request.resolver_match.url_name == 'calendar' %}bg-white/10 text-white border-l-4 border-chiromo-gold{% else %}text-gray-300 hover:bg-white/5 hover:text-white{% endif %} rounded-lg transition">
