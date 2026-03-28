@@ -21,13 +21,16 @@ def pricing_page(request):
 def payment_success(request):
     checkout_id = request.GET.get('checkout_id')
     transaction = None
+
     if checkout_id:
+        # Fetch the transaction object updated by the mpesa_callback
         transaction = Transaction.objects.filter(checkout_request_id=checkout_id).first()
 
     context = {
         'transaction': transaction,
-        'display_name': transaction.mpesa_full_name if transaction and transaction.mpesa_full_name else request.user.get_full_name(),
-        'is_confirmed': transaction and transaction.transaction_code and not transaction.transaction_code.startswith('ws_')
+        'full_name': request.user.get_full_name() or request.user.username,
+        'is_confirmed': transaction and transaction.transaction_code and not transaction.transaction_code.startswith(
+            'ws_')
     }
     return render(request, 'payments/success.html', context)
 
