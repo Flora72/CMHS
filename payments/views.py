@@ -3,7 +3,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.views.decorators.csrf import csrf_exempt
 from django.http import JsonResponse, HttpResponse
-
+from django.urls import reverse
 from appointments.models import Appointment, Payment
 from .models import Transaction
 from .mpesa import lipa_na_mpesa_online
@@ -33,7 +33,6 @@ def payment_success(request):
     context = {
         'transaction': transaction,
         'full_name': request.user.get_full_name() or request.user.username,
-        # Check if the RDK... code has been saved by the callback yet
         'is_confirmed': transaction and transaction.transaction_code and not transaction.transaction_code.startswith(
             'ws_')
     }
@@ -92,7 +91,8 @@ def initiate_payment(request, appointment_id=None):
 
             messages.success(request, "STK Push sent. Please check your handset.")
 
-            return redirect(f'payments/pay/success/?checkout_id={transaction.checkout_request_id}')
+            base_url = reverse('payment_success')
+            return redirect(f"{base_url}?checkout_id={transaction.checkout_request_id}")
 
         else:
             transaction.status = 'failed'
