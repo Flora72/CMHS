@@ -182,58 +182,32 @@ JAZZMIN_SETTINGS = {
         {"name": "Sign Out", "url": "admin:logout", "icon": "fas fa-sign-out-alt"},
     ],
 
-    # SIDEBAR CONFIGURATION (FLATTENED)
+    # SIDEBAR CONFIGURATION
     "show_sidebar": True,
-    "navigation_expanded": False,
-    "hide_apps": [],
+    "navigation_expanded": True,
+    "hide_apps": ["auth"],
     "hide_models": ["appointments.SessionLog", "auth.Group"],
-
-
     "order_with_respect_to": [
         "accounts.User",
         "appointments.Appointment",
         "payments.Transaction",
-        "sites.Site"
+        "payments.Payment"
     ],
 
     # ICONS
     "icons": {
-        "accounts.user": "fas fa-user-md",
-        "appointments.appointment": "fas fa-calendar-check",
-        "payments.transaction": "fas fa-file-invoice-dollar",
-        "sites.site": "fas fa-globe",
+        "accounts.user": "fas fa-users",
+        "appointments.appointment": "fas fa-clipboard-list",
+        "payments.transaction": "fas fa-money-check-alt",
+        "payments.payment": "fas fa-receipt",
     },
 
-    # CUSTOM LINKS (Merged for Mobile Sign Out & PDF)
-    "custom_links": {
-        "accounts": [
-            {
-                "name": "Sign Out",
-                "url": "/admin/logout/",
-                "icon": "fas fa-power-off",
-                "permissions": ["auth.view_user"]
-            }
-        ],
-        "appointments": [
-            {
-                "name": "Download PDF Summary",
-                "url": "export_appointments_pdf",
-                "icon": "fas fa-file-pdf",
-                "permissions": ["auth.view_user"]
-            }
-        ],
-    },
-
-    # UI HANDLERS
-    "use_google_fonts": True,
     "show_ui_builder": False,
-    "theme": "flatly",
-    "changeform_format": "horizontal_tabs",
+    "changeform_format": "single",
     "related_modal_active": True,
-    "custom_js": "admin/js/tab_fix.js",
+
 }
 
-# UI TWEAKS FOR MOBILE RESPONSIVENESS
 JAZZMIN_UI_TWEAKS = {
     "navbar_fixed": True,
     "sidebar_fixed": False,
