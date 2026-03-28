@@ -17,7 +17,6 @@ class Transaction(models.Model):
     phone_number = models.CharField(max_length=15)
     amount = models.DecimalField(max_digits=10, decimal_places=2)
     transaction_code = models.CharField(max_length=20, unique=True, null=True, blank=True)
-    mpesa_full_name = models.CharField(max_length=255, null=True, blank=True)
     checkout_request_id = models.CharField(max_length=100, unique=True, null=True)
     payment_type = models.CharField(max_length=20, choices=TYPE_CHOICES, default='session')
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')

@@ -113,56 +113,39 @@ def mpesa_callback(request):
                 mpesa_code = None
                 amount_paid = None
                 phone_used = None
-                government_name = None
 
                 for item in metadata:
-                    name = item.get('Name')
-                    value = item.get('Value')
+                    if item.get('Name') == 'MpesaReceiptNumber':
+                        mpesa_code = item.get('Value')
+                    elif item.get('Name') == 'Amount':
+                        amount_paid = item.get('Value')
+                    elif item.get('Name') == 'PhoneNumber':
+                        phone_used = item.get('Value')
 
-                    if name == 'MpesaReceiptNumber':
-                        mpesa_code = value
-                    elif name == 'Amount':
-                        amount_paid = value
-                    elif name == 'PhoneNumber':
-                        phone_used = value
-                    elif name in ['ExternalReference', 'CustomerName']:
-                        government_name = value
+                # Update the Transaction Record
+                tx = Transaction.objects.get(checkout_request_id=checkout_id)
+                tx.status = 'completed'
+                tx.transaction_code = mpesa_code
+                tx.save()
 
+                # Update User Status
+                user = tx.user
+                user.is_premium = True
+                user.save()
+
+                # Update the Appointment Payment
                 try:
-                    tx = Transaction.objects.get(checkout_request_id=checkout_id)
-                    tx.status = 'completed'
-                    tx.transaction_code = mpesa_code
-
-                    if government_name:
-                        tx.mpesa_full_name = government_name
-                    tx.save()
+                    pay_record = Payment.objects.get(transaction_code=checkout_id)
+                    pay_record.status = 'completed'
+                    pay_record.transaction_code = mpesa_code
+                    pay_record.save()
 
 
-                    user = tx.user
-                    user.is_premium = True
-                    user.save()
-
-
-                    try:
-                        pay_record = Payment.objects.get(transaction_code=checkout_id)
-                        pay_record.status = 'completed'
-                        pay_record.transaction_code = mpesa_code
-                        pay_record.save()
-
-                        if pay_record.appointment:
-                            pay_record.appointment.status = 'confirmed'
-                            pay_record.appointment.save()
-                    except Payment.DoesNotExist:
-
-                        pass
-
-                except Transaction.DoesNotExist:
-                    print(f"Transaction with ID {checkout_id} not found.")
-
-            else:
-                # Handle failed transactions
-                checkout_id = stk.get('CheckoutRequestID')
-                Transaction.objects.filter(checkout_request_id=checkout_id).update(status='failed')
+                    if pay_record.appointment:
+                        pay_record.appointment.status = 'confirmed'
+                        pay_record.appointment.save()
+                except Payment.DoesNotExist:
+                    pass
 
         except Exception as e:
             print(f"Callback Logic Error: {e}")
@@ -171,11 +154,14 @@ def mpesa_callback(request):
 
 @login_required
 def generate_receipt(request, tx_id):
+    """
+    Fetches transaction metadata and renders a printable clinical receipt.
+    """
+    # Look for the transaction in the Transaction model
     transaction = get_object_or_404(Transaction, id=tx_id)
-    payer_name = transaction.mpesa_full_name if hasattr(transaction, 'mpesa_full_name') and transaction.mpesa_full_name else (request.user.get_full_name() or request.user.username)
 
     context = {
-        'full_name': payer_name,
+        'full_name': request.user.get_full_name() or request.user.username,
         'transaction_code': transaction.transaction_code,
         'amount': transaction.amount,
         'date': transaction.timestamp,
