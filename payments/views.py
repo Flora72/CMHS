@@ -92,7 +92,7 @@ def initiate_payment(request, appointment_id=None):
 
             messages.success(request, "STK Push sent. Please check your handset.")
 
-            return redirect(f'/payments/pay/success/?checkout_id={transaction.checkout_request_id}')
+            return redirect(f'payments/pay/success/?checkout_id={transaction.checkout_request_id}')
 
         else:
             transaction.status = 'failed'
