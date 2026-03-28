@@ -191,16 +191,13 @@ Recovery in Dignity.
                 [request.user.email],
                 fail_silently=True
             )
-
-            # 4. REDIRECT TO PAYMENT
-            # This is the new logic that bridges the gap to the M-Pesa STK Push
             messages.info(request, 'Appointment saved. Please enter your M-Pesa PIN to finalize the session fee.')
-            return redirect('initiate_session_payment', appointment_id=appointment.id)
+            return redirect('initiate_payment', appointment_id=appointment.id)
 
     else:
         form = BookingForm()
 
-    # Filter to show only active therapists in the selection cards
+
     therapists = User.objects.filter(role='therapist')
 
     context = {
