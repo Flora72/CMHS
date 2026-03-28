@@ -53,10 +53,8 @@
 
             {% if transaction.transaction_code %}
                 <a href="{% url 'generate_receipt' transaction.id %}" target="_blank" class="block text-sm font-bold text-chiromo-gold hover:text-yellow-600 transition">
-                    <i class="fas fa-file-pdf mr-1"></i> Download Official Receipt
+                    <i class="fas fa-file-pdf mr-1"></i> Download Receipt
                 </a>
-            {% else %}
-                <p class="text-[10px] text-gray-400 italic">Refreshing for receipt code... (hit F5 if still processing)</p>
             {% endif %}
         </div>
     </div>
