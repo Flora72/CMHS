@@ -6,22 +6,24 @@ from django.utils import timezone
 User = get_user_model()
 
 class BookingForm(forms.ModelForm):
-    # We define the staggered slots here
+    # 1. Define the professional staggered slots (60 min session + 15 min buffer)
     TIME_SLOTS = [
         ('', '--- Select a Session ---'),
         ('08:00', '08:00 AM - 09:00 AM'),
         ('09:15', '09:15 AM - 10:15 AM'),
         ('10:30', '10:30 AM - 11:30 AM'),
         ('11:45', '11:45 AM - 12:45 PM'),
-        # Lunch Break (13:00) is skipped
+        # Lunch Break (13:00 - 14:00)
         ('14:00', '02:00 PM - 03:00 PM'),
         ('15:15', '03:15 PM - 04:15 PM'),
     ]
 
-    # Override the time field to be a Select dropdown instead of a clock input
+    # Override the time field to use a dropdown instead of a clock
     time = forms.ChoiceField(
         choices=TIME_SLOTS,
-        widget=forms.Select(attrs={'class': 'w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-chiromo-gold'})
+        widget=forms.Select(attrs={
+            'class': 'w-full px-4 py-3 border-2 border-gray-100 rounded-xl focus:border-chiromo-gold focus:ring-0 transition bg-white'
+        })
     )
 
     class Meta:
@@ -32,23 +34,37 @@ class BookingForm(forms.ModelForm):
                 'class': 'w-full px-4 py-3 border-2 border-gray-100 rounded-xl focus:border-chiromo-gold focus:ring-0 transition appearance-none bg-white',
                 'style': 'cursor: pointer;'
             }),
-            'date': forms.DateInput(attrs={'type': 'date', 'class': 'w-full px-4 py-3 border-2 border-gray-100 rounded-xl focus:border-chiromo-gold'}),
-            'time': forms.Select(attrs={'class': 'w-full px-4 py-3 border-2 border-gray-100 rounded-xl focus:border-chiromo-gold'}),
-            'mode': forms.Select(attrs={'class': 'w-full px-4 py-3 border-2 border-gray-100 rounded-xl focus:border-chiromo-gold'}),
-            'notes': forms.Textarea(attrs={'rows': 3, 'class': 'w-full px-4 py-3 border-2 border-gray-100 rounded-xl focus:border-chiromo-gold'}),
+            'date': forms.DateInput(attrs={
+                'type': 'date',
+                'class': 'w-full px-4 py-3 border-2 border-gray-100 rounded-xl focus:border-chiromo-gold'
+            }),
+            'mode': forms.Select(attrs={
+                'class': 'w-full px-4 py-3 border-2 border-gray-100 rounded-xl focus:border-chiromo-gold'
+            }),
+            'notes': forms.Textarea(attrs={
+                'rows': 3,
+                'class': 'w-full px-4 py-3 border-2 border-gray-100 rounded-xl focus:border-chiromo-gold',
+                'placeholder': 'Briefly describe your reason for visit...'
+            }),
         }
 
     def __init__(self, *args, **kwargs):
         super(BookingForm, self).__init__(*args, **kwargs)
+
+        # 2. Filter queryset to only show users with the 'therapist' role
         self.fields['therapist'].queryset = User.objects.filter(role='therapist')
 
-        today = timezone.now().date().strftime('%Y-%m-%d')
-        self.fields['date'].widget.attrs['min'] = today
-
+        # 3. Format the dropdown label to show: Dr. Lastname Firstname — (Specialization)
         self.fields['therapist'].label_from_instance = lambda obj: (
-            f"Dr. {obj.last_name} {obj.first_name}" if obj.last_name and obj.first_name
+            f"Dr. {obj.last_name} {obj.first_name} — ({obj.get_specialization_display()})"
+            if obj.last_name and hasattr(obj, 'get_specialization_display') and obj.specialization
+            else f"Dr. {obj.last_name} {obj.first_name}" if obj.last_name
             else f"Dr. {obj.username}"
         )
+
+        # 4. Set minimum date to Today to prevent back-dated bookings
+        today = timezone.now().date().strftime('%Y-%m-%d')
+        self.fields['date'].widget.attrs['min'] = today
 
 class SessionLogForm(forms.ModelForm):
     class Meta:
