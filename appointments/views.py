@@ -24,9 +24,12 @@ from reportlab.lib import colors
 from reportlab.lib.units import inch
 from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph
 from reportlab.lib.styles import getSampleStyleSheet
-from .models import Appointment
 from payments.models import Transaction
+from django.contrib.auth import get_user_model
 
+
+
+User = get_user_model()
 
 
 # ---------------------------------------------
@@ -140,50 +143,76 @@ def calendar_view(request):
 
     return render(request, 'appointments/calendar.html', context)
 
+
+
 @login_required
-@premium_required
 def book_appointment(request):
     """
-    Handles the booking of clinical sessions.
-    Updated to redirect to the M-Pesa payment gateway before final confirmation.
+    Handles the booking of clinical sessions with 8am-4pm slot validation
+    and real-time therapist availability checking.
     """
     if request.method == 'POST':
         form = BookingForm(request.POST)
         if form.is_valid():
-            # 1. Save the appointment but keep it in 'pending' status
+            # 1. Create instance but don't save to DB yet
             appointment = form.save(commit=False)
+
+            # 2. Therapist Availability Check (The "Notification" Logic)
+            # We check if this therapist already has a pending or confirmed
+            # appointment on this specific date at this specific time.
+            is_busy = Appointment.objects.filter(
+                therapist=appointment.therapist,
+                date=appointment.date,
+                time=appointment.time,
+                status__in=['pending', 'confirmed']
+            ).exists()
+
+            if is_busy:
+                messages.error(
+                    request,
+                    f"Dr. {appointment.therapist.last_name} is already booked for the "
+                    f"{dict(form.fields['time'].choices)[appointment.time]} slot. "
+                    "Please select another time or therapist."
+                )
+                # Return to form with the error message
+                therapists = User.objects.filter(role='therapist')
+                return render(request, 'appointments/book_appointment.html', {
+                    'form': form,
+                    'therapists': therapists
+                })
+
+            # 3. If available, finalize the appointment record
             appointment.patient = request.user
             appointment.status = 'pending'
-            appointment.save()
 
-            # 2. Generate the Telehealth Link (if online)
+            # 4. Generate Telehealth Link for Online Sessions
             if appointment.mode == 'online':
                 date_str = appointment.date.strftime('%Y%m%d')
-                # Custom Jitsi/8x8 URL structure for Chiromo
-                appointment.meeting_link = f"https://8x8.vc/vpaas-magic-cookie-chiromo-demo/CMHS-Therapy-{appointment.id}-{date_str}"
-                appointment.save()
+                appointment.meeting_link = (
+                    f"https://8x8.vc/vpaas-magic-cookie-chiromo-demo/"
+                    f"CMHS-Therapy-{request.user.id}-{date_str}"
+                )
 
-            # 3. Trigger Email Notification (Drafting the record)
+            appointment.save()
+
+            # 5. Notify Patient via Email (Initiation Receipt)
             subject = 'Appointment Initiated - Chiromo Hospital'
-            meeting_info = appointment.meeting_link if appointment.mode == 'online' else 'Physical Session at Branch'
-
             message = f"""
 Dear {request.user.first_name},
 
-Your appointment request has been received. 
+Your appointment request for Dr. {appointment.therapist.last_name} has been received.
 
-Therapist: Dr. {appointment.therapist.last_name}
+Details:
 Date: {appointment.date}
-Time: {appointment.time}
-Session Type: {appointment.mode}
-Status: Pending Payment
+Time Slot: {dict(form.fields['time'].choices)[appointment.time]}
+Type: {appointment.get_mode_display()}
 
-Please complete your M-Pesa transaction to finalize this booking.
-Meeting Link (Active after payment): {meeting_info}
+Action Required:
+Please complete the M-Pesa STK push on your phone to finalize this booking. 
+Once paid, your status will update to 'Confirmed'.
 
 Recovery in Dignity.
             """
-
             send_mail(
                 subject,
                 message,
@@ -191,12 +220,13 @@ Recovery in Dignity.
                 [request.user.email],
                 fail_silently=True
             )
-            messages.info(request, 'Appointment saved. Please enter your M-Pesa PIN to finalize the session fee.')
+
+            # 6. Redirect to Payment Gateway
+            messages.success(request, 'Slot reserved! Please complete the M-Pesa payment.')
             return redirect('initiate_payment', appointment_id=appointment.id)
 
     else:
         form = BookingForm()
-
 
     therapists = User.objects.filter(role='therapist')
 

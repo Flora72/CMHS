@@ -6,27 +6,45 @@ from django.utils import timezone
 User = get_user_model()
 
 class BookingForm(forms.ModelForm):
+    # We define the staggered slots here
+    TIME_SLOTS = [
+        ('', '--- Select a Session ---'),
+        ('08:00', '08:00 AM - 09:00 AM'),
+        ('09:15', '09:15 AM - 10:15 AM'),
+        ('10:30', '10:30 AM - 11:30 AM'),
+        ('11:45', '11:45 AM - 12:45 PM'),
+        # Lunch Break (13:00) is skipped
+        ('14:00', '02:00 PM - 03:00 PM'),
+        ('15:15', '03:15 PM - 04:15 PM'),
+    ]
+
+    # Override the time field to be a Select dropdown instead of a clock input
+    time = forms.ChoiceField(
+        choices=TIME_SLOTS,
+        widget=forms.Select(attrs={'class': 'w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-chiromo-gold'})
+    )
+
     class Meta:
         model = Appointment
         fields = ['therapist', 'date', 'time', 'mode', 'notes']
         widgets = {
-            'date': forms.DateInput(attrs={'type': 'date', 'class': 'w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-chiromo-gold'}),
-            'time': forms.TimeInput(attrs={'type': 'time', 'class': 'w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-chiromo-gold'}),
-            'notes': forms.Textarea(attrs={'rows': 3, 'class': 'w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-chiromo-gold'}),
-            'mode': forms.Select(attrs={'class': 'w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-chiromo-gold'}),
-            'therapist': forms.Select(attrs={'class': 'w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-chiromo-gold'}),
+            'date': forms.DateInput(attrs={'type': 'date',
+                                           'class': 'w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-chiromo-gold'}),
+            'notes': forms.Textarea(
+                attrs={'rows': 3, 'class': 'w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-chiromo-gold'}),
+            'mode': forms.Select(
+                attrs={'class': 'w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-chiromo-gold'}),
+            'therapist': forms.Select(
+                attrs={'class': 'w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-chiromo-gold'}),
         }
 
     def __init__(self, *args, **kwargs):
         super(BookingForm, self).__init__(*args, **kwargs)
-
-        # Only shows users who are marked as 'therapist'
         self.fields['therapist'].queryset = User.objects.filter(role='therapist')
 
         today = timezone.now().date().strftime('%Y-%m-%d')
         self.fields['date'].widget.attrs['min'] = today
 
-        #  Shows "Dr. Lastname" if available, otherwise shows Username
         self.fields['therapist'].label_from_instance = lambda obj: (
             f"Dr. {obj.last_name} {obj.first_name}" if obj.last_name and obj.first_name
             else f"Dr. {obj.username}"
