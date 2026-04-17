@@ -43,7 +43,7 @@ class BookingForm(forms.ModelForm):
             'mode': forms.Select(attrs={
                 'class': 'w-full px-4 py-3 border-2 border-gray-100 rounded-xl focus:border-chiromo-gold'
             }),
-            'notes': forms.TextArea(attrs={
+            'notes': forms.Textarea(attrs={
                 'rows': 3,
                 'class': 'w-full px-4 py-3 border-2 border-gray-100 rounded-xl focus:border-chiromo-gold',
                 'placeholder': 'Briefly describe your reason for visit...'
