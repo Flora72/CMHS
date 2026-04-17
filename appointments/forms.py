@@ -2,23 +2,25 @@ from django import forms
 from .models import Appointment, SessionLog
 from django.contrib.auth import get_user_model
 from django.utils import timezone
+from datetime import datetime
+import pytz
+
 
 User = get_user_model()
 
+
 class BookingForm(forms.ModelForm):
-    # 1. Define the professional staggered slots (60 min session + 15 min buffer)
+    # Standardized 8am - 4pm sessions
     TIME_SLOTS = [
         ('', '--- Select a Session ---'),
         ('08:00', '08:00 AM - 09:00 AM'),
         ('09:15', '09:15 AM - 10:15 AM'),
         ('10:30', '10:30 AM - 11:30 AM'),
         ('11:45', '11:45 AM - 12:45 PM'),
-        # Lunch Break (13:00 - 14:00)
         ('14:00', '02:00 PM - 03:00 PM'),
         ('15:15', '03:15 PM - 04:15 PM'),
     ]
 
-    # Override the time field to use a dropdown instead of a clock
     time = forms.ChoiceField(
         choices=TIME_SLOTS,
         widget=forms.Select(attrs={
@@ -41,7 +43,7 @@ class BookingForm(forms.ModelForm):
             'mode': forms.Select(attrs={
                 'class': 'w-full px-4 py-3 border-2 border-gray-100 rounded-xl focus:border-chiromo-gold'
             }),
-            'notes': forms.Textarea(attrs={
+            'notes': forms.TextField(attrs={
                 'rows': 3,
                 'class': 'w-full px-4 py-3 border-2 border-gray-100 rounded-xl focus:border-chiromo-gold',
                 'placeholder': 'Briefly describe your reason for visit...'
@@ -51,10 +53,8 @@ class BookingForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super(BookingForm, self).__init__(*args, **kwargs)
 
-        # 2. Filter queryset to only show users with the 'therapist' role
+        # 1. Filter and Label Therapists with Specialization
         self.fields['therapist'].queryset = User.objects.filter(role='therapist')
-
-        # 3. Format the dropdown label to show: Dr. Lastname Firstname — (Specialization)
         self.fields['therapist'].label_from_instance = lambda obj: (
             f"Dr. {obj.last_name} {obj.first_name} — ({obj.get_specialization_display()})"
             if obj.last_name and hasattr(obj, 'get_specialization_display') and obj.specialization
@@ -62,9 +62,40 @@ class BookingForm(forms.ModelForm):
             else f"Dr. {obj.username}"
         )
 
-        # 4. Set minimum date to Today to prevent back-dated bookings
-        today = timezone.now().date().strftime('%Y-%m-%d')
-        self.fields['date'].widget.attrs['min'] = today
+        # 2. Get Current Nairobi Time
+        nairobi_tz = pytz.timezone('Africa/Nairobi')
+        now_nairobi = datetime.now(nairobi_tz)
+        today = now_nairobi.date()
+
+        # Set min date in the picker to today
+        self.fields['date'].widget.attrs['min'] = today.strftime('%Y-%m-%d')
+
+        # 3. Dynamic Time Filtering for Today
+        # If the user has picked a date (during POST or re-render)
+        date_val = self.data.get('date') or self.initial.get('date')
+
+        if date_val:
+            try:
+                # Convert string date to object
+                if isinstance(date_val, str):
+                    selected_date = datetime.strptime(date_val, '%Y-%m-%d').date()
+                else:
+                    selected_date = date_val
+
+                if selected_date == today:
+                    current_time_str = now_nairobi.strftime('%H:%M')
+                    # Only keep slots that are in the future
+                    valid_slots = [('', '--- Select a Session ---')]
+                    for val, label in self.TIME_SLOTS[1:]:
+                        if val > current_time_str:
+                            valid_slots.append((val, label))
+
+                    self.fields['time'].choices = valid_slots
+
+                    if len(valid_slots) <= 1:
+                        self.fields['time'].help_text = "No more slots available for today."
+            except (ValueError, TypeError):
+                pass
 
 class SessionLogForm(forms.ModelForm):
     class Meta:
