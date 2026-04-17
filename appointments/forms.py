@@ -28,14 +28,14 @@ class BookingForm(forms.ModelForm):
         model = Appointment
         fields = ['therapist', 'date', 'time', 'mode', 'notes']
         widgets = {
-            'date': forms.DateInput(attrs={'type': 'date',
-                                           'class': 'w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-chiromo-gold'}),
-            'notes': forms.Textarea(
-                attrs={'rows': 3, 'class': 'w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-chiromo-gold'}),
-            'mode': forms.Select(
-                attrs={'class': 'w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-chiromo-gold'}),
-            'therapist': forms.Select(
-                attrs={'class': 'w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-chiromo-gold'}),
+            'therapist': forms.Select(attrs={
+                'class': 'w-full px-4 py-3 border-2 border-gray-100 rounded-xl focus:border-chiromo-gold focus:ring-0 transition appearance-none bg-white',
+                'style': 'cursor: pointer;'
+            }),
+            'date': forms.DateInput(attrs={'type': 'date', 'class': 'w-full px-4 py-3 border-2 border-gray-100 rounded-xl focus:border-chiromo-gold'}),
+            'time': forms.Select(attrs={'class': 'w-full px-4 py-3 border-2 border-gray-100 rounded-xl focus:border-chiromo-gold'}),
+            'mode': forms.Select(attrs={'class': 'w-full px-4 py-3 border-2 border-gray-100 rounded-xl focus:border-chiromo-gold'}),
+            'notes': forms.Textarea(attrs={'rows': 3, 'class': 'w-full px-4 py-3 border-2 border-gray-100 rounded-xl focus:border-chiromo-gold'}),
         }
 
     def __init__(self, *args, **kwargs):
