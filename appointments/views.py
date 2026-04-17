@@ -53,7 +53,6 @@ def preview_payments_report(request):
         'export_url': 'export_payments_pdf'
     })
 
-
 def generate_pdf(filename, title, headers, data):
     response = HttpResponse(content_type='application/pdf')
     response['Content-Disposition'] = f'attachment; filename="{filename}.pdf"'
@@ -143,23 +142,14 @@ def calendar_view(request):
 
     return render(request, 'appointments/calendar.html', context)
 
-
-
 @login_required
 def book_appointment(request):
-    """
-    Handles the booking of clinical sessions with 8am-4pm slot validation
-    and real-time therapist availability checking.
-    """
     if request.method == 'POST':
         form = BookingForm(request.POST)
         if form.is_valid():
-            # 1. Create instance but don't save to DB yet
             appointment = form.save(commit=False)
 
-            # 2. Therapist Availability Check (The "Notification" Logic)
-            # We check if this therapist already has a pending or confirmed
-            # appointment on this specific date at this specific time.
+            # Therapist Availability Check
             is_busy = Appointment.objects.filter(
                 therapist=appointment.therapist,
                 date=appointment.date,
@@ -168,73 +158,41 @@ def book_appointment(request):
             ).exists()
 
             if is_busy:
+                # Get the human-readable time from the choices for the error message
+                time_display = dict(form.fields['time'].choices).get(appointment.time, appointment.time)
                 messages.error(
                     request,
-                    f"Dr. {appointment.therapist.last_name} is already booked for the "
-                    f"{dict(form.fields['time'].choices)[appointment.time]} slot. "
-                    "Please select another time or therapist."
+                    f"Dr. {appointment.therapist.last_name} is already booked for the {time_display} slot. Please select another time or therapist."
                 )
-                # Return to form with the error message
                 therapists = User.objects.filter(role='therapist')
                 return render(request, 'appointments/book_appointment.html', {
                     'form': form,
-                    'therapists': therapists
+                    'therapists': therapists,
+                    'selected_therapist_id': str(appointment.therapist.id)  # Keep doctor selected on error
                 })
 
-            # 3. If available, finalize the appointment record
             appointment.patient = request.user
             appointment.status = 'pending'
 
-            # 4. Generate Telehealth Link for Online Sessions
             if appointment.mode == 'online':
                 date_str = appointment.date.strftime('%Y%m%d')
-                appointment.meeting_link = (
-                    f"https://8x8.vc/vpaas-magic-cookie-chiromo-demo/"
-                    f"CMHS-Therapy-{request.user.id}-{date_str}"
-                )
+                appointment.meeting_link = f"https://8x8.vc/vpaas-magic-cookie-chiromo-demo/CMHS-Therapy-{request.user.id}-{date_str}"
 
             appointment.save()
 
-            # 5. Notify Patient via Email (Initiation Receipt)
+            # Email Logic
+            time_label = dict(form.fields['time'].choices).get(appointment.time, appointment.time)
             subject = 'Appointment Initiated - Chiromo Hospital'
-            message = f"""
-Dear {request.user.first_name},
+            message = f"Dear {request.user.first_name},\n\nYour appointment for Dr. {appointment.therapist.last_name} at {time_label} has been received. Please complete the M-Pesa payment.\n\nRecovery in Dignity."
+            send_mail(subject, message, 'noreply@chiromo.com', [request.user.email], fail_silently=True)
 
-Your appointment request for Dr. {appointment.therapist.last_name} has been received.
-
-Details:
-Date: {appointment.date}
-Time Slot: {dict(form.fields['time'].choices)[appointment.time]}
-Type: {appointment.get_mode_display()}
-
-Action Required:
-Please complete the M-Pesa STK push on your phone to finalize this booking. 
-Once paid, your status will update to 'Confirmed'.
-
-Recovery in Dignity.
-            """
-            send_mail(
-                subject,
-                message,
-                'noreply@chiromo.com',
-                [request.user.email],
-                fail_silently=True
-            )
-
-            # 6. Redirect to Payment Gateway
             messages.success(request, 'Slot reserved! Please complete the M-Pesa payment.')
             return redirect('initiate_payment', appointment_id=appointment.id)
-
     else:
         form = BookingForm()
 
     therapists = User.objects.filter(role='therapist')
-
-    context = {
-        'form': form,
-        'therapists': therapists
-    }
-    return render(request, 'appointments/book_appointment.html', context)
+    return render(request, 'appointments/book_appointment.html', {'form': form, 'therapists': therapists})
 
 @login_required
 def log_session(request, appointment_id):

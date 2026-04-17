@@ -4,23 +4,30 @@
 
 {% block content %}
 <div class="fixed inset-0 flex bg-gray-50 overflow-hidden font-sans">
-
     {% include 'includes/patient_sidebar.html' %}
 
     <main class="flex-1 overflow-y-auto mt-16 md:mt-0 p-4 md:p-8 w-full">
         <div class="max-w-3xl mx-auto">
-
-            <div class="mb-8">
+            <div class="mb-6">
                 <h1 class="text-3xl font-bold text-chiromo-navy">New Appointment</h1>
+                <p class="text-gray-600">Select a practitioner and a preferred time slot (8:00 AM - 4:00 PM).</p>
             </div>
 
-            <div class="bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden">
-                <div class="bg-chiromo-navy px-6 py-4 border-b border-blue-900">
-                    <h2 class="text-white font-bold text-lg">Session Details</h2>
+            <div class="bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden mb-20">
+                <div class="bg-chiromo-navy px-6 py-4">
+                    <h2 class="text-white font-bold text-lg">Booking Details</h2>
                 </div>
 
                 <div class="p-6 md:p-8">
-                    <form method="POST" class="space-y-6">
+                    {% if messages %}
+                        {% for message in messages %}
+                            <div class="mb-4 p-4 rounded-lg {% if message.tags == 'error' %}bg-red-100 text-red-700{% else %}bg-green-100 text-green-700{% endif %} font-medium">
+                                {{ message }}
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+
+                    <form method="POST" id="bookingForm" class="space-y-6">
                         {% csrf_token %}
 
                         <div class="hidden">
@@ -28,52 +35,52 @@
                         </div>
 
                         <div>
-                            <label class="block text-sm font-bold text-chiromo-navy mb-3">Select Therapist</label>
-
-                            <div class="grid grid-cols-1 gap-4">
+                            <label class="block text-sm font-bold text-chiromo-navy mb-4">Select Practitioner</label>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 {% for therapist in therapists %}
-                                <div id="card-{{ therapist.id }}" class="therapist-card border-2 border-gray-100 p-4 rounded-lg hover:shadow-md transition bg-white flex justify-between items-center group">
+                                <div id="card-{{ therapist.id }}"
+                                     class="therapist-card border-2 border-gray-100 p-4 rounded-xl transition bg-white flex justify-between items-center cursor-pointer hover:border-chiromo-gold"
+                                     onclick="selectTherapist('{{ therapist.id }}')">
                                     <div>
-                                        <h3 class="font-bold text-chiromo-navy">Dr. {{ therapist.last_name }}</h3>
-                                        <span class="inline-block bg-blue-100 text-blue-800 text-xs px-2 py-0.5 rounded-full font-bold mt-1 uppercase">
-                                            {{ therapist.get_specialization_display }}
-                                        </span>
+                                        <h3 class="font-bold text-chiromo-navy">Dr. {{ therapist.last_name }} {{ therapist.first_name }}</h3>
+                                        <p class="text-xs text-gray-500">Mental Health Specialist</p>
                                     </div>
-
-                                    <button type="button" onclick="selectTherapist('{{ therapist.id }}')" class="px-4 py-2 bg-gray-100 text-chiromo-navy text-xs font-bold rounded hover:bg-chiromo-gold hover:text-white transition">
-                                        Select
-                                    </button>
+                                    <div id="status-{{ therapist.id }}" class="status-indicator h-6 w-6 rounded-full border-2 border-gray-200 flex items-center justify-center">
+                                        </div>
                                 </div>
-                                {% empty %}
-                                <p class="text-red-500">No therapists available at the moment.</p>
                                 {% endfor %}
+                            </div>
+                            {% if form.therapist.errors %}
+                                <p class="text-red-500 text-xs mt-2">Please select a therapist.</p>
+                            {% endif %}
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div>
+                                <label class="block text-sm font-bold text-chiromo-navy mb-2">Available Date</label>
+                                {{ form.date }}
+                            </div>
+                            <div>
+                                <label class="block text-sm font-bold text-chiromo-navy mb-2">Session Slot (8am-4pm)</label>
+                                {{ form.time }}
                             </div>
                         </div>
 
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div>
-                                <label class="block text-sm font-bold text-chiromo-navy mb-2">Date</label>
-                                {{ form.date }}
-                            </div>
-                            <div>
-                                <label class="block text-sm font-bold text-chiromo-navy mb-2">Time</label>
-                                {{ form.time }}
+                                <label class="block text-sm font-bold text-chiromo-navy mb-2">Session Type</label>
+                                {{ form.mode }}
                             </div>
                         </div>
 
                         <div>
-                            <label class="block text-sm font-bold text-chiromo-navy mb-2">Session Type</label>
-                            {{ form.mode }}
-                        </div>
-
-                        <div>
-                            <label class="block text-sm font-bold text-chiromo-navy mb-2">Notes</label>
+                            <label class="block text-sm font-bold text-chiromo-navy mb-2">Reason for Visit (Optional)</label>
                             {{ form.notes }}
                         </div>
 
-                        <div class="pt-4 border-t border-gray-100 flex justify-end">
-                            <button type="submit" class="bg-chiromo-gold hover:bg-yellow-600 text-white font-bold py-3 px-8 rounded-lg shadow-md transition">
-                                Confirm Booking
+                        <div class="pt-6 border-t border-gray-100">
+                            <button type="submit" class="w-full md:w-auto float-right bg-chiromo-gold hover:bg-yellow-600 text-white font-bold py-3 px-12 rounded-lg shadow-md transition-all active:scale-95">
+                                Proceed to Payment
                             </button>
                         </div>
                     </form>
@@ -85,30 +92,55 @@
 
 <script>
     function selectTherapist(therapistId) {
-        const select = document.querySelector('select[name="therapist"]');
-        select.value = therapistId;
+        // 1. Update the hidden Django select field
+        const hiddenSelect = document.querySelector('select[name="therapist"]');
+        hiddenSelect.value = therapistId;
 
+        // 2. Reset all cards to default state
         document.querySelectorAll('.therapist-card').forEach(card => {
-            card.classList.remove('border-chiromo-gold', 'bg-yellow-50');
+            card.classList.remove('border-chiromo-gold', 'bg-yellow-50', 'ring-2', 'ring-chiromo-gold');
             card.classList.add('border-gray-100', 'bg-white');
 
-            // Reset button
-            const btn = card.querySelector('button');
-            btn.innerText = "Select";
-            btn.classList.remove('bg-chiromo-navy', 'text-white');
-            btn.classList.add('bg-gray-100', 'text-chiromo-navy');
+            // Reset checkmark indicators
+            const indicator = card.querySelector('.status-indicator');
+            indicator.innerHTML = '';
+            indicator.classList.remove('bg-chiromo-navy', 'border-chiromo-navy');
+            indicator.classList.add('border-gray-200');
         });
 
-
+        // 3. Highlight the selected card
         const selectedCard = document.getElementById('card-' + therapistId);
         selectedCard.classList.remove('border-gray-100', 'bg-white');
-        selectedCard.classList.add('border-chiromo-gold', 'bg-yellow-50');
+        selectedCard.classList.add('border-chiromo-gold', 'bg-yellow-50', 'ring-2', 'ring-chiromo-gold');
 
-        // Change button to "Selected"
-        const selectedBtn = selectedCard.querySelector('button');
-        selectedBtn.innerText = "Selected ✓";
-        selectedBtn.classList.remove('bg-gray-100', 'text-chiromo-navy');
-        selectedBtn.classList.add('bg-chiromo-navy', 'text-white');
+        const selectedIndicator = selectedCard.querySelector('.status-indicator');
+        selectedIndicator.innerHTML = '<svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>';
+        selectedIndicator.classList.remove('border-gray-200');
+        selectedIndicator.classList.add('bg-chiromo-navy', 'border-chiromo-navy');
     }
+
+
+    window.onload = function() {
+        const initialId = document.querySelector('select[name="therapist"]').value;
+        if (initialId) {
+            selectTherapist(initialId);
+        }
+    };
 </script>
+
+<style>
+
+    input[type="date"], select, textarea {
+        width: 100%;
+        padding: 0.75rem 1rem;
+        border: 2px solid #F3F4F6;
+        border-radius: 0.75rem;
+        transition: all 0.2s;
+        outline: none;
+    }
+    input[type="date"]:focus, select:focus, textarea:focus {
+        border-color: #D4AF37;
+        background-color: #FFFDF5;
+    }
+</style>
 {% endblock %}
