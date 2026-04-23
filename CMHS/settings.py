@@ -89,7 +89,7 @@ WSGI_APPLICATION = 'CMHS.wsgi.application'
 
 DATABASES = {
     'default': dj_database_url.config(
-        default='postgresql://admin:7keu8lM4nOTjKw9T76FNe1o2WPiIrwBU@dpg-d6tgmu450q8c73ffl000-a.oregon-postgres.render.com/cmhs_db',
+        default='postgresql://cmhs_db_jjuu_user:sJe2TRZYJ7f1cNdL17sx6hSm0xqD7PZ0@dpg-d7l3mq1j2pic73cj66h0-a.oregon-postgres.render.com/cmhs_db_jjuu',
         conn_max_age=600
     )
 }
