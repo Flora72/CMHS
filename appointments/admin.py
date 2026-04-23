@@ -1,13 +1,12 @@
 from django.contrib import admin
 from payments.models import Transaction
-from accounts.models import Specialization
 from .models import Appointment, SessionLog
 from django.db.models import Sum
 
 
 
 admin.site.register(SessionLog)
-admin.site.register(Specialization)
+
 
 @admin.register(Appointment)
 class AppointmentAdmin(admin.ModelAdmin):
