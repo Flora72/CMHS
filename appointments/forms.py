@@ -56,11 +56,12 @@ class BookingForm(forms.ModelForm):
         # 1. Filter and Label Therapists with Specialization
         self.fields['therapist'].queryset = User.objects.filter(role='therapist')
         self.fields['therapist'].label_from_instance = lambda obj: (
-            f"Dr. {obj.last_name} {obj.first_name} — ({obj.get_specialization_display()})"
-            if obj.last_name and hasattr(obj, 'get_specialization_display') and obj.specialization
+            f"Dr. {obj.last_name} {obj.first_name} — ({obj.specialization.name})"
+            if obj.last_name and obj.specialization
             else f"Dr. {obj.last_name} {obj.first_name}" if obj.last_name
             else f"Dr. {obj.username}"
         )
+
 
         # 2. Get Current Nairobi Time
         nairobi_tz = pytz.timezone('Africa/Nairobi')
@@ -70,8 +71,7 @@ class BookingForm(forms.ModelForm):
         # Set min date in the picker to today
         self.fields['date'].widget.attrs['min'] = today.strftime('%Y-%m-%d')
 
-        # 3. Dynamic Time Filtering for Today
-        # If the user has picked a date (during POST or re-render)
+
         date_val = self.data.get('date') or self.initial.get('date')
 
         if date_val:
